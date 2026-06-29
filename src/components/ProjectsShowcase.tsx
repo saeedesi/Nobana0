@@ -111,7 +111,6 @@ export default function ProjectsShowcase() {
           font="bold 30px Vazirmatn"
           scrollSpeed={2}
           scrollEase={0.05}
-          scrollLinked
           onItemClick={handleItemClick}
         />
       </div>
