@@ -75,7 +75,12 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
       body.style.right = prev.right;
       body.style.width = prev.width;
       body.style.overflow = prev.overflow;
+      // Restore the scroll position instantly — the html uses scroll-smooth,
+      // which would otherwise animate the jump from 0 back down to the section.
+      const prevBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = 'auto';
       window.scrollTo(0, scrollY);
+      root.style.scrollBehavior = prevBehavior;
       root.classList.remove('lightbox-open');
     };
   }, [onClose, paginate]);
