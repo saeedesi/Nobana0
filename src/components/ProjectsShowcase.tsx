@@ -86,15 +86,18 @@ const projects: Project[] = [
 
 export default function ProjectsShowcase() {
   const [selected, setSelected] = useState<number | null>(null);
-  // Lower bend on small screens (the curve was too aggressive on mobile).
-  const [bend, setBend] = useState(3);
+  // Mobile gets a softer bend and scroll-linked rotation (vertical page scroll
+  // spins the gallery); desktop keeps the wheel/drag interaction.
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const apply = () => setBend(window.innerWidth < 768 ? 1 : 3);
+    const apply = () => setIsMobile(window.innerWidth < 768);
     apply();
     window.addEventListener('resize', apply);
     return () => window.removeEventListener('resize', apply);
   }, []);
+
+  const bend = isMobile ? 1 : 3;
 
   const items = useMemo(() => projects.map(p => ({ image: p.image, text: p.text })), []);
   const handleItemClick = useCallback((index: number) => setSelected(index), []);
@@ -111,7 +114,7 @@ export default function ProjectsShowcase() {
           font="bold 30px Vazirmatn"
           scrollSpeed={2}
           scrollEase={0.05}
-          scrollLinked
+          scrollLinked={isMobile}
           onItemClick={handleItemClick}
         />
       </div>
