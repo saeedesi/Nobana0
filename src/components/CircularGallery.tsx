@@ -5,7 +5,7 @@
 //   • Vazirmatn as the default canvas label font (self-hosted, no Google Fonts)
 
 import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl';
-import { useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 type GL = Renderer['gl'];
 function debounce<T extends (...args: any[]) => void>(func: T, wait: number) {
   let timeout: number;
@@ -662,6 +662,13 @@ class App {
   setScrollTarget(value: number) {
     this.scroll.target = value;
   }
+  // Snap a given item to the center (used when returning from the lightbox).
+  centerIndex(index: number) {
+    if (!this.medias[0]) return;
+    const target = this.medias[0].width * index;
+    this.scroll.target = target;
+    this.scroll.current = target;
+  }
   // Total width of one full set of items — one complete loop of the gallery.
   getLoopWidth(): number {
     return this.medias[0] ? this.medias[0].width * this.itemsLength : 0;
@@ -747,19 +754,33 @@ interface CircularGalleryProps {
   /** Rotate the gallery from the page scroll position as it passes by. */
   scrollLinked?: boolean;
 }
-export default function CircularGallery({
-  items,
-  bend = 3,
-  textColor = '#ffffff',
-  borderRadius = 0.05,
-  font = DEFAULT_FONT,
-  fontUrl,
-  scrollSpeed = 2,
-  scrollEase = 0.05,
-  onItemClick,
-  scrollLinked = false
-}: CircularGalleryProps) {
+export interface CircularGalleryHandle {
+  centerItem: (index: number) => void;
+}
+const CircularGallery = forwardRef<CircularGalleryHandle, CircularGalleryProps>(function CircularGallery(
+  {
+    items,
+    bend = 3,
+    textColor = '#ffffff',
+    borderRadius = 0.05,
+    font = DEFAULT_FONT,
+    fontUrl,
+    scrollSpeed = 2,
+    scrollEase = 0.05,
+    onItemClick,
+    scrollLinked = false
+  },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const appRef = useRef<App | null>(null);
+  useImperativeHandle(
+    ref,
+    () => ({
+      centerItem: (index: number) => appRef.current?.centerIndex(index)
+    }),
+    []
+  );
   useEffect(() => {
     if (!containerRef.current) return;
     let app: App | undefined;
@@ -778,6 +799,7 @@ export default function CircularGallery({
         onItemClick,
         scrollLinked
       });
+      appRef.current = app;
 
       if (scrollLinked) {
         const el = containerRef.current;
@@ -802,6 +824,7 @@ export default function CircularGallery({
         window.removeEventListener('resize', onPageScroll);
       }
       if (app) app.destroy();
+      appRef.current = null;
     };
   }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase, onItemClick, scrollLinked]);
   return (
@@ -813,4 +836,6 @@ export default function CircularGallery({
       aria-label="گالری پروژه‌ها. برای جابجایی از کلیدهای جهت‌نمای چپ و راست استفاده کنید."
     />
   );
-}
+});
+
+export default CircularGallery;

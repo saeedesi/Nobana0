@@ -46,16 +46,21 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
     };
     window.addEventListener('keydown', onKey);
 
-    // Desktop: mouse wheel flips between images (one notch per slide).
+    // Desktop: mouse wheel flips one image per gesture. A trackpad fires a long
+    // burst of events, so we lock on the first and only unlock once the wheel
+    // has been quiet for a moment (trailing debounce) — avoids skipping two.
     let wheelLock = false;
+    let wheelEndTimer = 0;
     const onWheel = (e: WheelEvent) => {
       const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      if (Math.abs(delta) < 8 || wheelLock) return;
+      if (Math.abs(delta) < 8) return;
+      window.clearTimeout(wheelEndTimer);
+      wheelEndTimer = window.setTimeout(() => {
+        wheelLock = false;
+      }, 140);
+      if (wheelLock) return;
       wheelLock = true;
       paginate(delta > 0 ? 1 : -1);
-      window.setTimeout(() => {
-        wheelLock = false;
-      }, 350);
     };
     window.addEventListener('wheel', onWheel, { passive: true });
 

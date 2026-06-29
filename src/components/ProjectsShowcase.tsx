@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import CircularGallery from '@/components/CircularGallery';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import CircularGallery, { type CircularGalleryHandle } from '@/components/CircularGallery';
 import ProjectLightbox from '@/components/ProjectLightbox';
 
 interface Project {
@@ -99,14 +99,28 @@ export default function ProjectsShowcase() {
 
   const bend = isMobile ? 1 : 3;
 
+  const galleryRef = useRef<CircularGalleryHandle>(null);
   const items = useMemo(() => projects.map(p => ({ image: p.image, text: p.text })), []);
   const handleItemClick = useCallback((index: number) => setSelected(index), []);
-  const handleClose = useCallback(() => setSelected(null), []);
+  // On close, snap the gallery back to the project that was opened so it never
+  // jumps to a different item (e.g. on mobile where scroll drives rotation).
+  const handleClose = useCallback(() => {
+    setSelected(prev => {
+      if (prev !== null) {
+        const idx = prev;
+        // Slight delay so this wins over the scroll event fired by the
+        // lightbox's scroll-position restore.
+        window.setTimeout(() => galleryRef.current?.centerItem(idx), 60);
+      }
+      return null;
+    });
+  }, []);
 
   return (
     <>
       <div className="h-[520px] md:h-[640px] w-full">
         <CircularGallery
+          ref={galleryRef}
           items={items}
           bend={bend}
           textColor="#ffffff"
