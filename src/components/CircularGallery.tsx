@@ -582,7 +582,12 @@ class App {
       });
     });
   }
+  isLocked(): boolean {
+    return typeof document !== 'undefined' && document.documentElement.classList.contains('lightbox-open');
+  }
   onTouchDown(e: MouseEvent | TouchEvent) {
+    // Ignore input while the lightbox is open so the gallery behind stays put.
+    if (this.isLocked()) return;
     this.isDown = true;
     this.dragged = false;
     this.scroll.position = this.scroll.current;
@@ -622,12 +627,14 @@ class App {
     return idx % this.itemsLength;
   }
   onWheel(e: Event) {
+    if (this.isLocked()) return;
     const wheelEvent = e as WheelEvent;
     const delta = wheelEvent.deltaY || (wheelEvent as any).wheelDelta || (wheelEvent as any).detail;
     this.scroll.target += (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
     this.onCheckDebounce();
   }
   onKeyDown(e: KeyboardEvent) {
+    if (this.isLocked()) return;
     switch (e.key) {
       case 'ArrowRight':
         e.preventDefault();
@@ -775,7 +782,7 @@ export default function CircularGallery({
       if (scrollLinked) {
         const el = containerRef.current;
         onPageScroll = () => {
-          if (!app) return;
+          if (!app || app.isLocked()) return;
           const rect = el.getBoundingClientRect();
           const vh = window.innerHeight || document.documentElement.clientHeight;
           // 0 as the gallery enters from the bottom, 1 as it leaves the top.
