@@ -119,7 +119,7 @@ export default function ProjectsShowcase() {
       </p>
 
       {selected !== null && (
-        <ProjectLightbox project={projects[selected]} onClose={handleClose} />
+        <ProjectLightbox project={projects[selected]} onClose={handleClose} anchorId="portfolio" />
       )}
     </>
   );

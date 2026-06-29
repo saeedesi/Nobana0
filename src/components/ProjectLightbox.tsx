@@ -15,13 +15,15 @@ export interface LightboxProject {
 interface ProjectLightboxProps {
   project: LightboxProject;
   onClose: () => void;
+  /** Element id to scroll back to on close (robust against orientation changes). */
+  anchorId?: string;
 }
 
 function toFa(n: number): string {
   return n.toLocaleString('fa-IR', { useGrouping: false });
 }
 
-export default function ProjectLightbox({ project, onClose }: ProjectLightboxProps) {
+export default function ProjectLightbox({ project, onClose, anchorId }: ProjectLightboxProps) {
   const images = project.images;
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
@@ -75,15 +77,19 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
       body.style.right = prev.right;
       body.style.width = prev.width;
       body.style.overflow = prev.overflow;
-      // Restore the scroll position instantly — the html uses scroll-smooth,
-      // which would otherwise animate the jump from 0 back down to the section.
+      // Restore instantly (the html uses scroll-smooth, which would otherwise
+      // animate the jump). Prefer scrolling back to the anchor element: a raw
+      // pixel value becomes invalid after an orientation change and can land at
+      // the bottom of the (now shorter) page.
       const prevBehavior = root.style.scrollBehavior;
       root.style.scrollBehavior = 'auto';
-      window.scrollTo(0, scrollY);
+      const anchor = anchorId ? document.getElementById(anchorId) : null;
+      if (anchor) anchor.scrollIntoView({ block: 'center' });
+      else window.scrollTo(0, scrollY);
       root.style.scrollBehavior = prevBehavior;
       root.classList.remove('lightbox-open');
     };
-  }, [onClose, paginate]);
+  }, [onClose, paginate, anchorId]);
 
   return createPortal(
     <AnimatePresence>
