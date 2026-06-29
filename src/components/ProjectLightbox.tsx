@@ -46,11 +46,25 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
     };
     window.addEventListener('keydown', onKey);
 
+    // Desktop: mouse wheel flips between images (one notch per slide).
+    let wheelLock = false;
+    const onWheel = (e: WheelEvent) => {
+      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (Math.abs(delta) < 8 || wheelLock) return;
+      wheelLock = true;
+      paginate(delta > 0 ? 1 : -1);
+      window.setTimeout(() => {
+        wheelLock = false;
+      }, 350);
+    };
+    window.addEventListener('wheel', onWheel, { passive: true });
+
     // Robust scroll lock (works on iOS Safari, where body overflow:hidden is
     // ignored): pin the body in place and restore the scroll position on close.
     const body = document.body;
     const root = document.documentElement;
     const scrollY = window.scrollY;
+    const openLandscape = window.innerWidth > window.innerHeight;
     // Signal the locked state so scroll-driven UI (e.g. the navbar) can ignore
     // the transient scroll reset and not replay its animations on close.
     root.classList.add('lightbox-open');
@@ -71,21 +85,26 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
 
     return () => {
       window.removeEventListener('keydown', onKey);
+      window.removeEventListener('wheel', onWheel);
       body.style.position = prev.position;
       body.style.top = prev.top;
       body.style.left = prev.left;
       body.style.right = prev.right;
       body.style.width = prev.width;
       body.style.overflow = prev.overflow;
-      // Restore instantly (the html uses scroll-smooth, which would otherwise
-      // animate the jump). Prefer scrolling back to the anchor element: a raw
-      // pixel value becomes invalid after an orientation change and can land at
-      // the bottom of the (now shorter) page.
+      // Restore instantly (html uses scroll-smooth). Normally restore the exact
+      // scroll position so the same gallery item stays centered. Only if the
+      // orientation flipped while open (the pixel value is now invalid and can
+      // land at the page bottom) fall back to the section anchor.
       const prevBehavior = root.style.scrollBehavior;
       root.style.scrollBehavior = 'auto';
+      const nowLandscape = window.innerWidth > window.innerHeight;
       const anchor = anchorId ? document.getElementById(anchorId) : null;
-      if (anchor) anchor.scrollIntoView({ block: 'center' });
-      else window.scrollTo(0, scrollY);
+      if (nowLandscape !== openLandscape && anchor) {
+        anchor.scrollIntoView({ block: 'center' });
+      } else {
+        window.scrollTo(0, scrollY);
+      }
       root.style.scrollBehavior = prevBehavior;
       root.classList.remove('lightbox-open');
     };
