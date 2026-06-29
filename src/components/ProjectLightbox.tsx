@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 
 export interface LightboxProject {
   text: string;
@@ -24,6 +25,7 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
   const images = project.images;
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [expanded, setExpanded] = useState(false);
 
   const paginate = useCallback(
     (dir: number) => {
@@ -73,10 +75,12 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
     };
   }, [onClose, paginate]);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl px-4 py-16 landscape-mobile:p-0"
+        className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl landscape-mobile:p-0 ${
+          expanded ? 'p-0' : 'px-4 py-16'
+        }`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -92,8 +96,20 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
           <X className="w-5 h-5" />
         </button>
 
+        {/* Expand / collapse (desktop only) */}
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            setExpanded(v => !v);
+          }}
+          aria-label={expanded ? 'کوچک‌کردن' : 'بزرگ‌کردن'}
+          className="hidden md:flex absolute top-6 left-20 z-20 w-11 h-11 rounded-full border border-white/20 bg-black/40 items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          {expanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+        </button>
+
         {/* Title */}
-        <div className="mb-6 text-center landscape-mobile:hidden">
+        <div className={`mb-6 text-center landscape-mobile:hidden ${expanded ? 'hidden' : ''}`}>
           <h3 className="text-2xl md:text-3xl font-light text-primary">{project.text}</h3>
           {project.subtitle && (
             <p className="text-sm text-white/50 mt-1 tracking-widest">{project.subtitle}</p>
@@ -102,7 +118,11 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
 
         {/* Stage */}
         <div
-          className="relative w-full max-w-[960px] aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-white/5 landscape-mobile:max-w-none landscape-mobile:h-full landscape-mobile:aspect-auto landscape-mobile:rounded-none landscape-mobile:border-0 landscape-mobile:bg-transparent"
+          className={`relative overflow-hidden bg-white/5 landscape-mobile:max-w-none landscape-mobile:h-full landscape-mobile:aspect-auto landscape-mobile:rounded-none landscape-mobile:border-0 landscape-mobile:bg-transparent ${
+            expanded
+              ? 'w-full h-full max-w-none rounded-none border-0 bg-transparent'
+              : 'w-full max-w-[960px] aspect-[4/3] rounded-2xl border border-white/10'
+          }`}
           onClick={e => e.stopPropagation()}
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
@@ -127,7 +147,9 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
                 alt={`${project.text} - تصویر ${toFa(index + 1)}`}
                 fill
                 sizes="(max-width: 768px) 100vw, 960px"
-                className="object-cover pointer-events-none select-none landscape-mobile:object-contain"
+                className={`pointer-events-none select-none landscape-mobile:object-contain ${
+                  expanded ? 'object-contain' : 'object-cover'
+                }`}
                 priority
               />
             </motion.div>
@@ -157,7 +179,9 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
         {/* Counter + dots */}
         {images.length > 1 && (
           <div
-            className="mt-6 flex flex-col items-center gap-4 landscape-mobile:absolute landscape-mobile:bottom-3 landscape-mobile:mt-0"
+            className={`flex flex-col items-center gap-4 landscape-mobile:absolute landscape-mobile:bottom-3 landscape-mobile:mt-0 ${
+              expanded ? 'absolute bottom-4 mt-0' : 'mt-6'
+            }`}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center gap-2">
@@ -181,6 +205,7 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
           </div>
         )}
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
