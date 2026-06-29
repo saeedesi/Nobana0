@@ -451,6 +451,7 @@ interface AppConfig {
   scrollSpeed?: number;
   scrollEase?: number;
   onItemClick?: (index: number) => void;
+  scrollLinked?: boolean;
 }
 class App {
   container: HTMLElement;
@@ -487,6 +488,7 @@ class App {
   downOnContainer: boolean = false;
   itemsLength: number = 0;
   onItemClick?: (index: number) => void;
+  scrollLinked: boolean = false;
   constructor(
     container: HTMLElement,
     {
@@ -497,7 +499,8 @@ class App {
       font = DEFAULT_FONT,
       scrollSpeed = 2,
       scrollEase = 0.05,
-      onItemClick
+      onItemClick,
+      scrollLinked = false
     }: AppConfig
   ) {
     document.documentElement.classList.remove('no-js');
@@ -505,6 +508,7 @@ class App {
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
     this.onItemClick = onItemClick;
+    this.scrollLinked = scrollLinked;
     this.itemsLength = items && items.length ? items.length : 0;
     this.onCheckDebounce = debounce(this.onCheck.bind(this), 200);
     this.createRenderer();
@@ -638,11 +642,22 @@ class App {
     }
   }
   onCheck() {
+    // In scroll-linked mode the page scroll position drives the target, so we
+    // must not snap it to the nearest item.
+    if (this.scrollLinked) return;
     if (!this.medias || !this.medias[0]) return;
     const width = this.medias[0].width;
     const itemIndex = Math.round(Math.abs(this.scroll.target) / width);
     const item = width * itemIndex;
     this.scroll.target = this.scroll.target < 0 ? -item : item;
+  }
+  // Drive rotation from outside (e.g. the page scroll position).
+  setScrollTarget(value: number) {
+    this.scroll.target = value;
+  }
+  // Total width of one full set of items — one complete loop of the gallery.
+  getLoopWidth(): number {
+    return this.medias[0] ? this.medias[0].width * this.itemsLength : 0;
   }
   onResize() {
     this.screen = {
@@ -679,8 +694,12 @@ class App {
     this.boundOnTouchUp = this.onTouchUp.bind(this);
     this.boundOnKeyDown = this.onKeyDown.bind(this);
     window.addEventListener('resize', this.boundOnResize);
-    window.addEventListener('mousewheel', this.boundOnWheel);
-    window.addEventListener('wheel', this.boundOnWheel);
+    // When linked to page scroll, the page wheel drives rotation externally —
+    // don't also consume the wheel here (it would double the speed).
+    if (!this.scrollLinked) {
+      window.addEventListener('mousewheel', this.boundOnWheel);
+      window.addEventListener('wheel', this.boundOnWheel);
+    }
     window.addEventListener('mousedown', this.boundOnTouchDown);
     window.addEventListener('mousemove', this.boundOnTouchMove);
     window.addEventListener('mouseup', this.boundOnTouchUp);
@@ -718,6 +737,8 @@ interface CircularGalleryProps {
   scrollSpeed?: number;
   scrollEase?: number;
   onItemClick?: (index: number) => void;
+  /** Rotate the gallery from the page scroll position as it passes by. */
+  scrollLinked?: boolean;
 }
 export default function CircularGallery({
   items,
@@ -728,13 +749,15 @@ export default function CircularGallery({
   fontUrl,
   scrollSpeed = 2,
   scrollEase = 0.05,
-  onItemClick
+  onItemClick,
+  scrollLinked = false
 }: CircularGalleryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!containerRef.current) return;
     let app: App | undefined;
     let isMounted = true;
+    let onPageScroll: (() => void) | undefined;
     resolveFont(font, fontUrl).then(resolvedFont => {
       if (!isMounted || !containerRef.current) return;
       app = new App(containerRef.current, {
@@ -745,14 +768,35 @@ export default function CircularGallery({
         font: resolvedFont,
         scrollSpeed,
         scrollEase,
-        onItemClick
+        onItemClick,
+        scrollLinked
       });
+
+      if (scrollLinked) {
+        const el = containerRef.current;
+        onPageScroll = () => {
+          if (!app) return;
+          const rect = el.getBoundingClientRect();
+          const vh = window.innerHeight || document.documentElement.clientHeight;
+          // 0 as the gallery enters from the bottom, 1 as it leaves the top.
+          let p = (vh - rect.top) / (vh + rect.height);
+          p = Math.min(Math.max(p, 0), 1);
+          app.setScrollTarget(p * app.getLoopWidth());
+        };
+        window.addEventListener('scroll', onPageScroll, { passive: true });
+        window.addEventListener('resize', onPageScroll);
+        onPageScroll();
+      }
     });
     return () => {
       isMounted = false;
+      if (onPageScroll) {
+        window.removeEventListener('scroll', onPageScroll);
+        window.removeEventListener('resize', onPageScroll);
+      }
       if (app) app.destroy();
     };
-  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase, onItemClick]);
+  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase, onItemClick, scrollLinked]);
   return (
     <div
       className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y select-none"
