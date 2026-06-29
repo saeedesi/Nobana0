@@ -450,6 +450,7 @@ interface AppConfig {
   font?: string;
   scrollSpeed?: number;
   scrollEase?: number;
+  onItemClick?: (index: number) => void;
 }
 class App {
   container: HTMLElement;
@@ -480,6 +481,12 @@ class App {
   boundOnKeyDown!: (e: KeyboardEvent) => void;
   isDown: boolean = false;
   start: number = 0;
+  // Tap-vs-drag tracking so a click (not a swipe) on the centered item opens it.
+  downX: number = 0;
+  dragged: boolean = false;
+  downOnContainer: boolean = false;
+  itemsLength: number = 0;
+  onItemClick?: (index: number) => void;
   constructor(
     container: HTMLElement,
     {
@@ -489,13 +496,16 @@ class App {
       borderRadius = 0,
       font = DEFAULT_FONT,
       scrollSpeed = 2,
-      scrollEase = 0.05
+      scrollEase = 0.05,
+      onItemClick
     }: AppConfig
   ) {
     document.documentElement.classList.remove('no-js');
     this.container = container;
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
+    this.onItemClick = onItemClick;
+    this.itemsLength = items && items.length ? items.length : 0;
     this.onCheckDebounce = debounce(this.onCheck.bind(this), 200);
     this.createRenderer();
     this.createCamera();
@@ -547,6 +557,7 @@ class App {
       { image: `https://picsum.photos/seed/17/800/600?grayscale`, text: 'Santorini' }
     ];
     const galleryItems = items && items.length ? items : defaultItems;
+    this.itemsLength = galleryItems.length;
     this.mediasImages = galleryItems.concat(galleryItems);
     this.medias = this.mediasImages.map((data, index) => {
       return new Media({
@@ -569,18 +580,42 @@ class App {
   }
   onTouchDown(e: MouseEvent | TouchEvent) {
     this.isDown = true;
+    this.dragged = false;
     this.scroll.position = this.scroll.current;
     this.start = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    this.downX = this.start;
+    const target = e.target as Node | null;
+    this.downOnContainer = !!target && (target === this.gl.canvas || this.container.contains(target));
   }
   onTouchMove(e: MouseEvent | TouchEvent) {
     if (!this.isDown) return;
     const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    if (Math.abs(x - this.downX) > 8) this.dragged = true;
     const distance = (this.start - x) * (this.scrollSpeed * 0.025);
     this.scroll.target = (this.scroll.position ?? 0) + distance;
   }
   onTouchUp() {
     this.isDown = false;
     this.onCheck();
+    // A tap (no meaningful drag) that started on the gallery opens the
+    // currently centered project.
+    if (this.downOnContainer && !this.dragged && this.onItemClick) {
+      this.onItemClick(this.getCenteredIndex());
+    }
+    this.downOnContainer = false;
+  }
+  getCenteredIndex(): number {
+    if (!this.medias.length || !this.itemsLength) return 0;
+    let min = Infinity;
+    let idx = 0;
+    this.medias.forEach((media, i) => {
+      const d = Math.abs(media.plane.position.x);
+      if (d < min) {
+        min = d;
+        idx = i;
+      }
+    });
+    return idx % this.itemsLength;
   }
   onWheel(e: Event) {
     const wheelEvent = e as WheelEvent;
@@ -682,6 +717,7 @@ interface CircularGalleryProps {
   fontUrl?: string;
   scrollSpeed?: number;
   scrollEase?: number;
+  onItemClick?: (index: number) => void;
 }
 export default function CircularGallery({
   items,
@@ -691,7 +727,8 @@ export default function CircularGallery({
   font = DEFAULT_FONT,
   fontUrl,
   scrollSpeed = 2,
-  scrollEase = 0.05
+  scrollEase = 0.05,
+  onItemClick
 }: CircularGalleryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -707,14 +744,15 @@ export default function CircularGallery({
         borderRadius,
         font: resolvedFont,
         scrollSpeed,
-        scrollEase
+        scrollEase,
+        onItemClick
       });
     });
     return () => {
       isMounted = false;
       if (app) app.destroy();
     };
-  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase]);
+  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase, onItemClick]);
   return (
     <div
       className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing"

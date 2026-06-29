@@ -1,22 +1,11 @@
 import Navbar from "@/components/Navbar";
 import ScrollHero from "@/components/ScrollHero";
 import ServicesSection from "@/components/ServicesSection";
-import CircularGallery from "@/components/CircularGallery";
+import ProjectsShowcase from "@/components/ProjectsShowcase";
 import AboutFounder from "@/components/AboutFounder";
 import PanelIntroSection from "@/components/PanelIntroSection";
 import ConsultationForm from "@/components/ConsultationForm";
 import Footer from "@/components/Footer";
-
-// Test projects for the Circular Gallery (swap images/titles for real ones later).
-const projects = [
-  { image: "/images/projects/project-1.jpg", text: "برج زنیت" },
-  { image: "/images/projects/project-2.jpg", text: "ویلا کاسپین" },
-  { image: "/images/projects/project-3.jpg", text: "مجتمع آرکا" },
-  { image: "/images/projects/project-4.jpg", text: "دفتر مرکزی هورامان" },
-  { image: "/images/projects/project-5.jpg", text: "بازسازی نیاوران" },
-  { image: "/images/projects/project-6.jpg", text: "پنت‌هاوس الوند" },
-  { image: "/images/projects/project-7.jpg", text: "لابی هتل درسا" },
-];
 
 export default function Home() {
   return (
@@ -41,17 +30,7 @@ export default function Home() {
           <div className="w-16 h-[2px] bg-primary mt-6 opacity-80 shadow-[0_0_10px_rgba(226,232,240,0.5)]"></div>
         </div>
 
-        <div className="h-[520px] md:h-[640px] w-full">
-          <CircularGallery
-            items={projects}
-            bend={3}
-            textColor="#ffffff"
-            borderRadius={0.05}
-            font="bold 30px Vazirmatn"
-            scrollSpeed={2}
-            scrollEase={0.05}
-          />
-        </div>
+        <ProjectsShowcase />
       </section>
 
       {/* 4. About Founder Section */}
