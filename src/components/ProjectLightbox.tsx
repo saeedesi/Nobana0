@@ -47,7 +47,11 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
     // Robust scroll lock (works on iOS Safari, where body overflow:hidden is
     // ignored): pin the body in place and restore the scroll position on close.
     const body = document.body;
+    const root = document.documentElement;
     const scrollY = window.scrollY;
+    // Signal the locked state so scroll-driven UI (e.g. the navbar) can ignore
+    // the transient scroll reset and not replay its animations on close.
+    root.classList.add('lightbox-open');
     const prev = {
       position: body.style.position,
       top: body.style.top,
@@ -72,6 +76,7 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
       body.style.width = prev.width;
       body.style.overflow = prev.overflow;
       window.scrollTo(0, scrollY);
+      root.classList.remove('lightbox-open');
     };
   }, [onClose, paginate]);
 

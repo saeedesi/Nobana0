@@ -24,9 +24,13 @@ export default function Navbar() {
   // Track scroll for shrinking header and timing the light shoot
   useEffect(() => {
     return scrollY.on("change", (latest) => {
+      // Ignore the transient scroll reset caused by the lightbox scroll lock,
+      // otherwise the navbar collapses and replays its sweep animation on close.
+      if (document.documentElement.classList.contains("lightbox-open")) return;
+
       const scrolled = latest > 60;
       setIsScrolled(scrolled);
-      
+
       if (!scrolled) {
         setHasShotLight(false);
       }
