@@ -20,7 +20,7 @@ const projects = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary/30 font-sans" dir="rtl">
+    <main className="min-h-screen w-full overflow-x-clip bg-[#0a0a0a] text-white selection:bg-primary/30 font-sans" dir="rtl">
       
       {/* Header / Navbar (Sticky & Shrinking) */}
       <Navbar />

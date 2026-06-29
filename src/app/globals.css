@@ -128,9 +128,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Clip horizontal overflow (decorative blurs, WebGL canvas) without
+       creating a scroll container, so sticky sections keep working. */
+    overflow-x: clip;
+    width: 100%;
   }
   html {
     @apply font-sans;
+    overflow-x: clip;
+  }
+  /* OGL/WebGL canvas should behave as a block and never exceed its box. */
+  canvas {
+    display: block;
+    max-width: 100%;
   }
 }
 
