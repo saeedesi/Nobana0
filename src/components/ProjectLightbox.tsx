@@ -94,7 +94,7 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   return createPortal(
     <AnimatePresence>
       <motion.div
-        className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl landscape-mobile:p-0 ${
+        className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden overscroll-none touch-none bg-black/90 backdrop-blur-xl landscape-mobile:p-0 ${
           expanded ? 'p-0' : 'px-4 py-16'
         }`}
         initial={{ opacity: 0 }}
