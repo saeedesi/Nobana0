@@ -15,59 +15,59 @@ const projects: Project[] = [
   {
     text: 'برج زنیت',
     subtitle: 'مجتمع مسکونی لوکس',
-    image: '/images/projects/project-1.jpg',
+    image: '/images/projects/zenith_tower_1782773624285.jpg',
     images: [
-      '/images/projects/project-1.jpg',
-      '/images/projects/project-1-2.jpg',
-      '/images/projects/project-1-3.jpg'
+      '/images/projects/zenith_tower_1782773624285.jpg',
+      '/images/projects/zenith_tower_lobby_1782774571011.jpg',
+      '/images/projects/zenith_tower_apt_1782774580394.jpg'
     ]
   },
   {
     text: 'ویلا کاسپین',
     subtitle: 'ویلای خصوصی',
-    image: '/images/projects/project-2.jpg',
+    image: '/images/projects/caspian_villa_1782773635794.jpg',
     images: [
-      '/images/projects/project-2.jpg',
-      '/images/projects/project-2-2.jpg',
-      '/images/projects/project-2-3.jpg'
+      '/images/projects/caspian_villa_1782773635794.jpg',
+      '/images/projects/caspian_villa_living_1782774590178.jpg',
+      '/images/projects/caspian_villa_pool_1782774599979.jpg'
     ]
   },
   {
     text: 'مجتمع آرکا',
     subtitle: 'تجاری',
-    image: '/images/projects/project-3.jpg',
+    image: '/images/projects/arca_complex_1782773649478.jpg',
     images: [
-      '/images/projects/project-3.jpg',
-      '/images/projects/project-3-2.jpg',
-      '/images/projects/project-3-3.jpg'
+      '/images/projects/arca_complex_1782773649478.jpg',
+      '/images/projects/arca_complex_atrium_1782774610333.jpg',
+      '/images/projects/arca_complex_dining_1782774621444.jpg'
     ]
   },
   {
     text: 'دفتر مرکزی هورامان',
     subtitle: 'اداری',
-    image: '/images/projects/project-4.jpg',
+    image: '/images/projects/houraman_hq_1782773660467.jpg',
     images: [
-      '/images/projects/project-4.jpg',
-      '/images/projects/project-4-2.jpg',
-      '/images/projects/project-4-3.jpg'
+      '/images/projects/houraman_hq_1782773660467.jpg',
+      '/images/projects/houraman_hq_workspace_1782774631366.jpg',
+      '/images/projects/houraman_hq_boardroom_1782774824942.jpg'
     ]
   },
   {
     text: 'بازسازی نیاوران',
     subtitle: 'بازسازی و دکوراسیون',
-    image: '/images/projects/project-5.jpg',
+    image: '/images/projects/niavaran_renovation_1782773671312.jpg',
     images: [
-      '/images/projects/project-5.jpg',
-      '/images/projects/project-5-2.jpg',
-      '/images/projects/project-5-3.jpg'
+      '/images/projects/niavaran_renovation_1782773671312.jpg',
+      '/images/projects/niavaran_kitchen_1782774834944.jpg',
+      '/images/projects/niavaran_bedroom_1782774844954.jpg'
     ]
   },
   {
     text: 'پنت‌هاوس الوند',
     subtitle: 'مسکونی لوکس',
-    image: '/images/projects/project-6.jpg',
+    image: '/images/projects/alvand_penthouse_1782773681642.jpg',
     images: [
-      '/images/projects/project-6.jpg',
+      '/images/projects/alvand_penthouse_1782773681642.jpg',
       '/images/projects/project-6-2.jpg',
       '/images/projects/project-6-3.jpg'
     ]
@@ -75,9 +75,9 @@ const projects: Project[] = [
   {
     text: 'لابی هتل درسا',
     subtitle: 'دکوراسیون داخلی',
-    image: '/images/projects/project-7.jpg',
+    image: '/images/projects/dorsa_hotel_lobby_1782773692288.jpg',
     images: [
-      '/images/projects/project-7.jpg',
+      '/images/projects/dorsa_hotel_lobby_1782773692288.jpg',
       '/images/projects/project-7-2.jpg',
       '/images/projects/project-7-3.jpg'
     ]
