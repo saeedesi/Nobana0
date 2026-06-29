@@ -41,18 +41,42 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
       else if (e.key === 'ArrowRight') paginate(-1);
     };
     window.addEventListener('keydown', onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+
+    // Robust scroll lock (works on iOS Safari, where body overflow:hidden is
+    // ignored): pin the body in place and restore the scroll position on close.
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow
+    };
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      window.scrollTo(0, scrollY);
     };
   }, [onClose, paginate]);
 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl px-4 py-16"
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl px-4 py-16 landscape-mobile:p-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -69,7 +93,7 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
         </button>
 
         {/* Title */}
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center landscape-mobile:hidden">
           <h3 className="text-2xl md:text-3xl font-light text-primary">{project.text}</h3>
           {project.subtitle && (
             <p className="text-sm text-white/50 mt-1 tracking-widest">{project.subtitle}</p>
@@ -78,7 +102,7 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
 
         {/* Stage */}
         <div
-          className="relative w-full max-w-[960px] aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-white/5"
+          className="relative w-full max-w-[960px] aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-white/5 landscape-mobile:max-w-none landscape-mobile:h-full landscape-mobile:aspect-auto landscape-mobile:rounded-none landscape-mobile:border-0 landscape-mobile:bg-transparent"
           onClick={e => e.stopPropagation()}
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
@@ -103,7 +127,7 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
                 alt={`${project.text} - تصویر ${toFa(index + 1)}`}
                 fill
                 sizes="(max-width: 768px) 100vw, 960px"
-                className="object-cover pointer-events-none select-none"
+                className="object-cover pointer-events-none select-none landscape-mobile:object-contain"
                 priority
               />
             </motion.div>
@@ -132,7 +156,10 @@ export default function ProjectLightbox({ project, onClose }: ProjectLightboxPro
 
         {/* Counter + dots */}
         {images.length > 1 && (
-          <div className="mt-6 flex flex-col items-center gap-4" onClick={e => e.stopPropagation()}>
+          <div
+            className="mt-6 flex flex-col items-center gap-4 landscape-mobile:absolute landscape-mobile:bottom-3 landscape-mobile:mt-0"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="flex items-center gap-2">
               {images.map((_, i) => (
                 <button

@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+/* Mobile in landscape (short viewport) — used to make the lightbox fullscreen. */
+@custom-variant landscape-mobile (@media (max-height: 500px) and (orientation: landscape));
 
 /* ─── Vazirmatn (Self-Hosted, Variable 100–900) ─────────────── */
 /* Local fonts so the build/runtime needs no Google Fonts network access. */
