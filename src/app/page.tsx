@@ -2,8 +2,6 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import ScrollHero from "@/components/ScrollHero";
 import ServicesSection from "@/components/ServicesSection";
-import ServicesSectionV2 from "@/components/ServicesSectionV2";
-import ServicesSectionV3 from "@/components/ServicesSectionV3";
 import AboutFounder from "@/components/AboutFounder";
 import PanelIntroSection from "@/components/PanelIntroSection";
 import ConsultationForm from "@/components/ConsultationForm";
@@ -21,12 +19,6 @@ export default function Home() {
 
       {/* 2. Services Section */}
       <ServicesSection />
-      
-      {/* 2.5 Services Section V2 (3D Coverflow Variant) */}
-      <ServicesSectionV2 />
-
-      {/* 2.6 Services Section V3 (Reversed Angles Variant) */}
-      <ServicesSectionV3 />
 
       {/* 3. Signature Projects Section */}
       <section id="portfolio" className="relative z-20 max-w-[1400px] mx-auto px-4 md:px-8 py-24 md:py-32">
