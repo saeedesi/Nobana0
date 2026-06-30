@@ -132,9 +132,21 @@ export default function ProjectsShowcase() {
           onItemClick={handleItemClick}
         />
       </div>
-      <p className="mt-6 text-center text-white/40 text-xs md:text-sm tracking-widest">
+      <p className="mt-6 text-center text-white/60 text-xs md:text-sm tracking-widest">
         برای مشاهده‌ی تصاویر هر پروژه روی کارت میانی ضربه بزنید
       </p>
+
+      {/* Accessible / SEO fallback: the gallery labels live inside a WebGL
+          canvas and are invisible to crawlers and screen readers. */}
+      <ul className="sr-only">
+        {projects.map((p, i) => (
+          <li key={p.text}>
+            <button type="button" onClick={() => setSelected(i)}>
+              {p.text} — {p.subtitle}
+            </button>
+          </li>
+        ))}
+      </ul>
 
       {selected !== null && (
         <ProjectLightbox project={projects[selected]} onClose={handleClose} anchorId="portfolio" />

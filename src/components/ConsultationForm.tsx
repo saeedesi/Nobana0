@@ -38,7 +38,7 @@ export default function ConsultationForm() {
                 id="fullName"
                 name="fullName"
                 type="text"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors"
                 placeholder="مثال: علی محمدی"
               />
             </div>
@@ -49,7 +49,7 @@ export default function ConsultationForm() {
                 id="phone"
                 name="phone"
                 type="tel"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary/50 transition-colors text-right"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors text-right"
                 placeholder="09120000000"
                 dir="ltr"
               />
@@ -72,7 +72,7 @@ export default function ConsultationForm() {
                     <option key={type} value={type} className="bg-[#111] text-white">{type}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none" />
+                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 pointer-events-none" />
               </div>
             </div>
             
@@ -82,7 +82,7 @@ export default function ConsultationForm() {
                 id="city"
                 name="city"
                 type="text"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors"
                 placeholder="تهران، زعفرانیه"
               />
             </div>
@@ -94,7 +94,7 @@ export default function ConsultationForm() {
               id="area"
               name="area"
               type="number"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary/50 transition-colors text-right"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors text-right"
               placeholder="مثال: 500"
               dir="ltr"
             />
@@ -106,7 +106,7 @@ export default function ConsultationForm() {
               id="description"
               name="description"
               rows={4}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary/50 transition-colors resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors resize-none"
               placeholder="توضیح مختصری درباره نیازها و چشم‌انداز شما از پروژه..."
             />
           </div>
@@ -114,9 +114,9 @@ export default function ConsultationForm() {
           <div className="flex flex-col gap-2">
             <span className="text-sm text-white/70 px-1">آپلود فایل نقشه (اختیاری)</span>
             <label htmlFor="planFile" className="w-full border border-dashed border-white/20 rounded-xl px-4 py-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-colors group">
-              <UploadCloud className="w-8 h-8 text-white/40 group-hover:text-primary transition-colors" />
+              <UploadCloud className="w-8 h-8 text-white/60 group-hover:text-primary transition-colors" />
               <span className="text-white/60 text-sm">برای انتخاب فایل کلیک کنید یا فایل را اینجا رها کنید</span>
-              <span className="text-white/30 text-xs">PDF, JPG, PNG (حداکثر 10 مگابایت)</span>
+              <span className="text-white/55 text-xs">PDF, JPG, PNG (حداکثر 10 مگابایت)</span>
               <input id="planFile" name="planFile" type="file" className="hidden" />
             </label>
           </div>

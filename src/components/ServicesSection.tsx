@@ -47,7 +47,7 @@ export default function ServicesSection() {
         {/* Title layer (behind cards) */}
         <div className="absolute top-12 left-0 w-full text-center z-0">
           <h3 className="text-sm tracking-[0.3em] text-primary mb-2 font-light">خدمات تخصصی</h3>
-          <h2 className="text-3xl md:text-5xl font-light text-white/40 tracking-wide">
+          <h2 className="text-3xl md:text-5xl font-light text-white/55 tracking-wide">
             حوزه‌های فعالیت نوبنـا
           </h2>
         </div>

@@ -80,10 +80,10 @@ export default function Footer() {
       </div>
 
       <div className="max-w-[1400px] mx-auto border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="text-white/40 text-xs font-light">
+        <p className="text-white/55 text-xs">
           تمامی حقوق برای برند <span className="text-white/60">نوبنا</span> محفوظ است. © {new Date().getFullYear().toLocaleString("fa-IR", { useGrouping: false })}
         </p>
-        <p className="text-white/40 text-xs font-light">
+        <p className="text-white/55 text-xs">
           طراحی و توسعه با <span className="text-red-500">♥</span>
         </p>
       </div>

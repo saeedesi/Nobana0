@@ -8,6 +8,7 @@ import PanelIntroSection from "@/components/PanelIntroSection";
 import ConsultationForm from "@/components/ConsultationForm";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
+import FloatingConsultCTA from "@/components/FloatingConsultCTA";
 
 export default function Home() {
   return (
@@ -49,6 +50,9 @@ export default function Home() {
 
       {/* 7. Footer */}
       <Footer />
+
+      {/* Always-visible consultation CTA */}
+      <FloatingConsultCTA />
 
     </main>
   );

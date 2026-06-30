@@ -261,18 +261,18 @@ npx prisma init
 
 ---
 
-### فاز ۱ — پایه و زیرساخت (اولویت: اجرا)
+### فاز ۱ — پایه و زیرساخت (انجام شد)
 
 **هدف:** پروژه Next.js راه‌اندازی شود، دیتابیس متصل باشد، layout اصلی آماده باشد.
 
 **تسک‌ها:**
 1. راه‌اندازی Next.js 14 با App Router + TypeScript + Tailwind
 2. تنظیم `next.config.js` با `output: 'standalone'`
-3. اضافه کردن فونت IRANSans به `globals.css` و Tailwind config
+3. اضافه کردن فونت Vazir به `globals.css` و Tailwind config
 4. تنظیم متغیرهای رنگی برند نوبنا در Tailwind:
-   - Primary: `#1B4F8A` (آبی تیره)
-   - Accent: `#F5A623` (طلایی)
-   - Background: `#f0f4f8`
+   - Primary: `#E5E4E2` (پلاتینیوم)
+   - Background: `#FFFFFF`
+   - Foreground: `#333333` (خاکستری تیره)
 5. نوشتن `schema.prisma` با تمام مدل‌های بالا
 6. اجرای `npx prisma migrate dev --name init`
 7. ساخت `app/layout.tsx` اصلی با فونت و direction: rtl
@@ -281,7 +281,7 @@ npx prisma init
 
 ---
 
-### فاز ۲ — صفحه اصلی و محتوای عمومی (اولویت: بعدی)
+### فاز ۲ — صفحه اصلی و محتوای عمومی (انجام شد)
 
 **هدف:** صفحه اصلی کامل با تمام بخش‌ها آماده شود.
 
@@ -433,18 +433,16 @@ server {
 ## 🎨 راهنمای بصری و ویژوال
 
 ### جهت طراحی (Design Direction)
-بر اساس تصویر مرجع تأیید شده: **Dark Luxury Minimal**
+بر اساس تصویر مرجع تأیید شده: **Platinum Minimal**
 
 | متغیر | مقدار |
 |---|---|
-| `--ink` | `#0D1117` (پس‌زمینه تاریک اصلی) |
-| `--ink-2` | `#1e2530` (Hero background) |
-| `--gold` | `#C49A3C` (accent طلایی) |
-| `--gold-light` | `#E8C46A` (gold روشن‌تر برای تیترها) |
-| `--off-white` | `#F8F7F4` (سطوح روشن) |
+| `--primary` | `#E5E4E2` (پلاتینیوم) |
+| `--background` | `#FFFFFF` (پس‌زمینه روشن) |
+| `--foreground` | `#333333` (متن اصلی) |
 | `--muted` | `#8a8f98` (متن ثانویه) |
 
-**فونت:** IRANSans (از پوشه fonts/ موجود)  
+**فونت:** Vazir (از پوشه fonts/ موجود)  
 **سبک:** فضای منفی زیاد · تایپوگرافی بزرگ · border line های ظریف · بدون سایه سنگین
 
 ### کتابخانه‌های فرانت‌اند
@@ -464,13 +462,13 @@ npx shadcn@latest add button card dialog sheet
 ## ✅ چک‌لیست شروع برای Antigravity
 
 ```
-[ ] 1. اجرای دستور create-next-app با پارامترهای بالا
-[ ] 2. کپی کردن فونت‌های IRANSans از پوشه fonts/ موجود به public/fonts/
-[ ] 3. تنظیم tailwind.config.ts برای فونت و رنگ‌های برند (dark luxury palette)
-[ ] 4. نصب shadcn/ui و Framer Motion
-[ ] 5. ساخت prisma/schema.prisma و اجرای migrate
-[ ] 6. ساخت layout.tsx با direction: rtl و فونت IRANSans
-[ ] 7. ساخت صفحه اصلی بر اساس موکاپ mockup_home.html
+[x] 1. اجرای دستور create-next-app با پارامترهای بالا
+[x] 2. کپی کردن فونت‌های Vazir از پوشه fonts/ موجود به public/fonts/
+[x] 3. تنظیم tailwind.config.ts برای فونت و رنگ‌های برند (Platinum palette)
+[x] 4. نصب shadcn/ui و Framer Motion
+[x] 5. ساخت prisma/schema.prisma و اجرای migrate
+[x] 6. ساخت layout.tsx با direction: rtl و فونت Vazir
+[x] 7. ساخت صفحه اصلی بر اساس موکاپ mockup_home.html
 ```
 
 ---
