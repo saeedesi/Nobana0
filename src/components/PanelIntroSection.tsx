@@ -1,5 +1,6 @@
 import { LayoutDashboard, FileText, CalendarClock, Camera } from "lucide-react";
 import Link from "next/link";
+import Reveal from "@/components/Reveal";
 
 export default function PanelIntroSection() {
   const features = [
@@ -71,7 +72,7 @@ export default function PanelIntroSection() {
         </div>
 
         {/* Text Content */}
-        <div className="order-1 lg:order-2 flex flex-col">
+        <Reveal className="order-1 lg:order-2 flex flex-col">
           <h3 className="text-sm tracking-[0.3em] text-primary mb-4 font-light">شفافیت به سبک نوبنا</h3>
           <h2 className="text-3xl md:text-5xl font-light text-white mb-6 leading-tight">
             پنل اختصاصی کارفرمایان
@@ -99,7 +100,7 @@ export default function PanelIntroSection() {
           <Link href="/panel" className="self-start px-10 py-4 bg-white text-black font-medium rounded-lg hover:bg-primary transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(226,232,240,0.3)]">
             ورود به پنل کارفرمایان
           </Link>
-        </div>
+        </Reveal>
 
       </div>
     </section>

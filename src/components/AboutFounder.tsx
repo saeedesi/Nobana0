@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Reveal from "@/components/Reveal";
 
 export default function AboutFounder() {
   return (
@@ -9,7 +10,7 @@ export default function AboutFounder() {
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
         
         {/* Text Content */}
-        <div className="flex flex-col">
+        <Reveal className="flex flex-col">
           <h3 className="text-sm tracking-[0.3em] text-primary mb-4 font-light">داستان نوبنـا</h3>
           <h2 className="text-3xl md:text-5xl font-light text-white mb-8 leading-tight">
             ارتقای مدیریت پیمان سنتی به مدلی <span className="font-medium text-white/90">حرفه‌ای و شفاف</span>
@@ -30,7 +31,7 @@ export default function AboutFounder() {
           <button className="mt-12 self-start px-8 py-3 border border-primary/50 text-white rounded-lg hover:bg-primary hover:text-black transition-all duration-300 tracking-wide text-sm bg-primary/5 backdrop-blur-sm">
             دانلود کاتالوگ و رزومه
           </button>
-        </div>
+        </Reveal>
 
         {/* Image / Abstract Visual */}
         <div className="relative h-[500px] lg:h-[700px] w-full rounded-3xl overflow-hidden border border-white/10 group">

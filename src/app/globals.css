@@ -189,3 +189,16 @@
 .animate-sweep-light {
   animation: sweep-light 2s ease-in-out 0.3s forwards;
 }
+
+/* Platinum glow utilities — soft light halos instead of heavy box shadows. */
+@layer utilities {
+  .glow {
+    box-shadow: 0 0 20px rgba(226, 232, 240, 0.22);
+  }
+  .glow-strong {
+    box-shadow: 0 0 34px rgba(226, 232, 240, 0.32);
+  }
+  .text-glow {
+    text-shadow: 0 0 18px rgba(226, 232, 240, 0.35);
+  }
+}

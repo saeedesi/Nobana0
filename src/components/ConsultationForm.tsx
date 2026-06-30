@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { UploadCloud, ChevronDown } from "lucide-react";
+import Reveal from "@/components/Reveal";
 
 export default function ConsultationForm() {
   const [projectType, setProjectType] = useState("");
@@ -22,12 +23,12 @@ export default function ConsultationForm() {
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
       
       <div className="max-w-[800px] mx-auto bg-white/[0.02] border border-white/10 rounded-3xl p-8 md:p-12 lg:p-16 backdrop-blur-xl shadow-2xl relative z-10">
-        <div className="text-center mb-12">
+        <Reveal className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-light text-white mb-4">درخواست مشاوره</h2>
           <p className="text-white/60 font-light leading-relaxed">
             برای بررسی اولیه پروژه و دریافت مشاوره تخصصی، اطلاعات خود را ثبت کنید تا در کوتاه‌ترین زمان با شما تماس بگیریم.
           </p>
-        </div>
+        </Reveal>
 
         <form className="flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
