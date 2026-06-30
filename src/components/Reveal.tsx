@@ -1,10 +1,10 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 // Slow, weighty entrance for a luxury feel. Used to fade content up as it
-// scrolls into view.
+// scrolls into view. Respects the user's "reduce motion" OS setting.
 export default function Reveal({
   children,
   className,
@@ -14,6 +14,10 @@ export default function Reveal({
   className?: string;
   delay?: number;
 }) {
+  const reduced = useReducedMotion();
+  if (reduced) {
+    return <div className={className}>{children}</div>;
+  }
   return (
     <motion.div
       className={className}

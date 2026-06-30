@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 
 const stats = [
   { value: 20, label: 'سال تجربه' },
@@ -14,9 +14,10 @@ function toFa(n: number): string {
 }
 
 function Counter({ value, active }: { value: number; active: boolean }) {
+  const reduced = useReducedMotion();
   const [n, setN] = useState(0);
   useEffect(() => {
-    if (!active) return;
+    if (!active || reduced) return;
     let raf = 0;
     const duration = 1600;
     const start = performance.now();
@@ -28,10 +29,12 @@ function Counter({ value, active }: { value: number; active: boolean }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [active, value]);
+  }, [active, value, reduced]);
+  // Reduced motion: show the final number immediately (no count-up).
+  const display = reduced ? value : n;
   return (
     <span className="text-glow tabular-nums">
-      {toFa(n)}
+      {toFa(display)}
       <span className="text-primary/70">+</span>
     </span>
   );
@@ -40,14 +43,15 @@ function Counter({ value, active }: { value: number; active: boolean }) {
 export default function HeroStats() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.4 });
+  const reduced = useReducedMotion();
 
   return (
     <section className="relative z-20 bg-[#0a0a0a] border-y border-white/5 py-14 md:py-20 px-4 md:px-8">
       <motion.div
         ref={ref}
-        initial={{ opacity: 0, y: 30 }}
+        initial={reduced ? { opacity: 1 } : { opacity: 0, y: 30 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: reduced ? 0 : 1.1, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-[1100px] mx-auto grid grid-cols-3 gap-4 md:gap-8 text-center"
       >
         {stats.map(s => (

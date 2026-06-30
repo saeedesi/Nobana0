@@ -6,6 +6,7 @@
 
 import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { useReducedMotion } from 'framer-motion';
 type GL = Renderer['gl'];
 function debounce<T extends (...args: any[]) => void>(func: T, wait: number) {
   let timeout: number;
@@ -222,6 +223,7 @@ interface MediaProps {
   textColor: string;
   borderRadius?: number;
   font?: string;
+  reducedMotion?: boolean;
 }
 class Media {
   extra: number = 0;
@@ -239,6 +241,7 @@ class Media {
   textColor: string;
   borderRadius: number;
   font?: string;
+  reducedMotion: boolean;
   program!: Program;
   plane!: Mesh;
   title!: Title;
@@ -264,7 +267,8 @@ class Media {
     bend,
     textColor,
     borderRadius = 0,
-    font
+    font,
+    reducedMotion = false
   }: MediaProps) {
     this.geometry = geometry;
     this.gl = gl;
@@ -280,6 +284,7 @@ class Media {
     this.textColor = textColor;
     this.borderRadius = borderRadius;
     this.font = font;
+    this.reducedMotion = reducedMotion;
     this.createShader();
     this.createMesh();
     this.createTitle();
@@ -403,8 +408,10 @@ class Media {
       }
     }
     this.speed = scroll.current - scroll.last;
-    this.program.uniforms.uTime.value += 0.04;
-    this.program.uniforms.uSpeed.value = this.speed;
+    // Freeze the continuous wave for reduced-motion users (keeps the planes flat
+    // unless the user is actively scrolling/dragging).
+    if (!this.reducedMotion) this.program.uniforms.uTime.value += 0.04;
+    this.program.uniforms.uSpeed.value = this.reducedMotion ? 0 : this.speed;
 
     // Color the item closest to the center, desaturate the rest.
     const colorRange = this.width * 0.5;
@@ -452,6 +459,7 @@ interface AppConfig {
   scrollEase?: number;
   onItemClick?: (index: number) => void;
   scrollLinked?: boolean;
+  reducedMotion?: boolean;
 }
 class App {
   container: HTMLElement;
@@ -489,6 +497,7 @@ class App {
   itemsLength: number = 0;
   onItemClick?: (index: number) => void;
   scrollLinked: boolean = false;
+  reducedMotion: boolean = false;
   constructor(
     container: HTMLElement,
     {
@@ -500,7 +509,8 @@ class App {
       scrollSpeed = 2,
       scrollEase = 0.05,
       onItemClick,
-      scrollLinked = false
+      scrollLinked = false,
+      reducedMotion = false
     }: AppConfig
   ) {
     document.documentElement.classList.remove('no-js');
@@ -509,6 +519,7 @@ class App {
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
     this.onItemClick = onItemClick;
     this.scrollLinked = scrollLinked;
+    this.reducedMotion = reducedMotion;
     this.itemsLength = items && items.length ? items.length : 0;
     this.onCheckDebounce = debounce(this.onCheck.bind(this), 200);
     this.createRenderer();
@@ -578,7 +589,8 @@ class App {
         bend,
         textColor,
         borderRadius,
-        font
+        font,
+        reducedMotion: this.reducedMotion
       });
     });
   }
@@ -774,6 +786,7 @@ const CircularGallery = forwardRef<CircularGalleryHandle, CircularGalleryProps>(
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<App | null>(null);
+  const reducedMotion = useReducedMotion() ?? false;
   useImperativeHandle(
     ref,
     () => ({
@@ -797,7 +810,8 @@ const CircularGallery = forwardRef<CircularGalleryHandle, CircularGalleryProps>(
         scrollSpeed,
         scrollEase,
         onItemClick,
-        scrollLinked
+        scrollLinked,
+        reducedMotion
       });
       appRef.current = app;
 
@@ -826,7 +840,7 @@ const CircularGallery = forwardRef<CircularGalleryHandle, CircularGalleryProps>(
       if (app) app.destroy();
       appRef.current = null;
     };
-  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase, onItemClick, scrollLinked]);
+  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase, onItemClick, scrollLinked, reducedMotion]);
   return (
     <div
       className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y select-none"

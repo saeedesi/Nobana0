@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 
 const texts = [
   {
@@ -42,11 +42,14 @@ export default function ScrollHero() {
   // Very subtle zoom effect on the background image as user scrolls down
   const scaleBg = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
 
+  // Respect reduced-motion: keep the opacity crossfade but drop parallax/zoom.
+  const reduced = useReducedMotion();
+
   return (
     <section id="hero" ref={containerRef} className="relative h-[300vh] w-full">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col">
         {/* Background Image */}
-        <motion.div className="absolute inset-0 z-0 origin-center" style={{ scale: scaleBg }}>
+        <motion.div className="absolute inset-0 z-0 origin-center" style={{ scale: reduced ? 1 : scaleBg }}>
           <Image
             src="/images/hero.png"
             alt="پروژه لوکس نوبنا"
@@ -62,7 +65,7 @@ export default function ScrollHero() {
           
           {/* Text 1 */}
           <motion.div 
-            style={{ opacity: opacity1, y: y1 }} 
+            style={{ opacity: opacity1, y: reduced ? 0 : y1 }}
             className="absolute flex flex-col items-center justify-center w-full px-4"
           >
             <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-bold text-white drop-shadow-2xl mb-4">
@@ -79,7 +82,7 @@ export default function ScrollHero() {
           {/* Text 2 */}
           <motion.div 
             initial={{ opacity: 0 }}
-            style={{ opacity: opacity2, y: y2 }} 
+            style={{ opacity: opacity2, y: reduced ? 0 : y2 }}
             className="absolute flex flex-col items-center justify-center w-full px-4"
           >
             <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-bold text-white drop-shadow-2xl mb-4">
@@ -96,7 +99,7 @@ export default function ScrollHero() {
           {/* Text 3 */}
           <motion.div 
             initial={{ opacity: 0 }}
-            style={{ opacity: opacity3, y: y3 }} 
+            style={{ opacity: opacity3, y: reduced ? 0 : y3 }}
             className="absolute flex flex-col items-center justify-center w-full px-4"
           >
             <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-bold text-white drop-shadow-2xl mb-4">
