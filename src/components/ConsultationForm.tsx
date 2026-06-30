@@ -38,7 +38,7 @@ export default function ConsultationForm() {
                 id="fullName"
                 name="fullName"
                 type="text"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors"
                 placeholder="مثال: علی محمدی"
               />
             </div>
@@ -49,7 +49,7 @@ export default function ConsultationForm() {
                 id="phone"
                 name="phone"
                 type="tel"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors text-right"
+                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors text-right"
                 placeholder="09120000000"
                 dir="ltr"
               />
@@ -65,7 +65,7 @@ export default function ConsultationForm() {
                   name="projectType"
                   value={projectType}
                   onChange={(e) => setProjectType(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:border-primary/50 transition-colors cursor-pointer"
+                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:border-primary/50 transition-colors cursor-pointer"
                 >
                   <option value="" disabled className="bg-[#111] text-white/50">انتخاب کنید...</option>
                   {projectTypes.map(type => (
@@ -82,7 +82,7 @@ export default function ConsultationForm() {
                 id="city"
                 name="city"
                 type="text"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors"
                 placeholder="تهران، زعفرانیه"
               />
             </div>
@@ -94,7 +94,7 @@ export default function ConsultationForm() {
               id="area"
               name="area"
               type="number"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors text-right"
+              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors text-right"
               placeholder="مثال: 500"
               dir="ltr"
             />
@@ -106,7 +106,7 @@ export default function ConsultationForm() {
               id="description"
               name="description"
               rows={4}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/45 focus:outline-none focus:border-primary/50 transition-colors resize-none"
+              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors resize-none"
               placeholder="توضیح مختصری درباره نیازها و چشم‌انداز شما از پروژه..."
             />
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +28,7 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const paginate = useCallback(
     (dir: number) => {
@@ -38,13 +39,44 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   );
 
   useEffect(() => {
+    const getFocusable = () =>
+      Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      ).filter(n => !n.hasAttribute('disabled'));
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      // RTL: Left arrow advances, Right arrow goes back.
-      else if (e.key === 'ArrowLeft') paginate(1);
-      else if (e.key === 'ArrowRight') paginate(-1);
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowLeft') {
+        paginate(1); // RTL: Left advances
+      } else if (e.key === 'ArrowRight') {
+        paginate(-1); // RTL: Right goes back
+      } else if (e.key === 'Tab') {
+        // Keep focus inside the dialog.
+        const list = getFocusable();
+        if (!list.length) return;
+        const first = list[0];
+        const last = list[list.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (active && !dialogRef.current?.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
+
+    // Move focus into the dialog, and restore it to the opener on close.
+    const opener = document.activeElement as HTMLElement | null;
+    const focusTimer = window.setTimeout(() => getFocusable()[0]?.focus(), 0);
 
     // Desktop: mouse wheel flips one image per gesture. A trackpad fires a long
     // burst of events, so we lock on the first and only unlock once the wheel
@@ -91,6 +123,8 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
     return () => {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('wheel', onWheel);
+      window.clearTimeout(focusTimer);
+      opener?.focus?.({ preventScroll: true });
       body.style.position = prev.position;
       body.style.top = prev.top;
       body.style.left = prev.left;
@@ -118,6 +152,10 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   return createPortal(
     <AnimatePresence>
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`گالری تصاویر پروژه ${project.text}`}
         className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden overscroll-none bg-black/90 backdrop-blur-xl landscape-mobile:p-0 ${
           expanded ? 'p-0' : 'px-4 py-16'
         }`}
@@ -229,14 +267,19 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
                 <button
                   key={i}
                   aria-label={`تصویر ${toFa(i + 1)}`}
+                  aria-current={i === index}
                   onClick={() => {
                     setDirection(i > index ? 1 : -1);
                     setIndex(i);
                   }}
-                  className={`h-2 rounded-full transition-all ${
-                    i === index ? 'w-6 bg-primary' : 'w-2 bg-white/30 hover:bg-white/50'
-                  }`}
-                />
+                  className="group flex items-center justify-center min-w-[24px] min-h-[24px]"
+                >
+                  <span
+                    className={`block h-2 rounded-full transition-all ${
+                      i === index ? 'w-6 bg-primary' : 'w-2 bg-white/40 group-hover:bg-white/60'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
             <span className="text-white/50 text-sm tracking-widest">

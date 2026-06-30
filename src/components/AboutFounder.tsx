@@ -11,7 +11,7 @@ export default function AboutFounder() {
         
         {/* Text Content */}
         <Reveal className="flex flex-col">
-          <h3 className="text-sm tracking-[0.3em] text-primary mb-4 font-light">داستان نوبنـا</h3>
+          <p className="text-sm tracking-[0.3em] text-primary mb-4 font-light">داستان نوبنـا</p>
           <h2 className="text-3xl md:text-5xl font-light text-white mb-8 leading-tight">
             ارتقای مدیریت پیمان سنتی به مدلی <span className="font-medium text-white/90">حرفه‌ای و شفاف</span>
           </h2>

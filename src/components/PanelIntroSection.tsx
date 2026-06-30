@@ -73,7 +73,7 @@ export default function PanelIntroSection() {
 
         {/* Text Content */}
         <Reveal className="order-1 lg:order-2 flex flex-col">
-          <h3 className="text-sm tracking-[0.3em] text-primary mb-4 font-light">شفافیت به سبک نوبنا</h3>
+          <p className="text-sm tracking-[0.3em] text-primary mb-4 font-light">شفافیت به سبک نوبنا</p>
           <h2 className="text-3xl md:text-5xl font-light text-white mb-6 leading-tight">
             پنل اختصاصی کارفرمایان
           </h2>

@@ -29,7 +29,7 @@ export default function Home() {
       {/* 3. Signature Projects Section (Circular Gallery) */}
       <section id="portfolio" className="relative z-20 py-24 md:py-32 overflow-hidden">
         <Reveal className="max-w-[1400px] mx-auto px-4 md:px-8 flex flex-col items-center mb-12 md:mb-16">
-          <h3 className="text-sm tracking-[0.3em] text-primary mb-4 font-light">آثار برگزیده</h3>
+          <p className="text-sm tracking-[0.3em] text-primary mb-4 font-light">آثار برگزیده</p>
           <h2 className="text-3xl md:text-5xl font-light text-white text-center">
             پروژه‌های شاخص
           </h2>
