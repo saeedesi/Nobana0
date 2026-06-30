@@ -4,8 +4,11 @@ import { useState } from "react";
 import { UploadCloud, ChevronDown } from "lucide-react";
 import Reveal from "@/components/Reveal";
 
+type Status = "idle" | "submitting" | "success" | "error";
+
 export default function ConsultationForm() {
   const [projectType, setProjectType] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
 
   const projectTypes = [
     "مسکونی",
@@ -16,6 +19,35 @@ export default function ConsultationForm() {
     "هتل",
     "بازسازی"
   ];
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (status === "submitting") return;
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    const payload = {
+      name: String(data.get("fullName") ?? ""),
+      phone: String(data.get("phone") ?? ""),
+      projectType: String(data.get("projectType") ?? ""),
+      city: String(data.get("city") ?? ""),
+      area: String(data.get("area") ?? ""),
+      description: String(data.get("description") ?? ""),
+    };
+    setStatus("submitting");
+    try {
+      const res = await fetch("/api/consultation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("request failed");
+      setStatus("success");
+      form.reset();
+      setProjectType("");
+    } catch {
+      setStatus("error");
+    }
+  }
 
   return (
     <section id="consultation" className="relative w-full py-24 md:py-32 px-4 md:px-8 bg-[#0a0a0a]">
@@ -30,7 +62,7 @@ export default function ConsultationForm() {
           </p>
         </Reveal>
 
-        <form className="flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col gap-2">
               <label htmlFor="fullName" className="text-sm text-white/70 px-1">نام و نام خانوادگی</label>
@@ -121,11 +153,29 @@ export default function ConsultationForm() {
             </label>
           </div>
 
-          <button 
-            type="submit" 
-            className="w-full mt-6 bg-primary text-black font-medium text-lg py-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300 shadow-[0_0_20px_rgba(226,232,240,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
+          {status === "success" && (
+            <p
+              role="status"
+              className="text-center text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-xl py-3"
+            >
+              درخواست شما با موفقیت ثبت شد. به‌زودی با شما تماس می‌گیریم.
+            </p>
+          )}
+          {status === "error" && (
+            <p
+              role="alert"
+              className="text-center text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-xl py-3"
+            >
+              ثبت درخواست با خطا مواجه شد. لطفاً دوباره تلاش کنید.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={status === "submitting"}
+            className="w-full mt-6 bg-primary text-black font-medium text-lg py-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300 shadow-[0_0_20px_rgba(226,232,240,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            ثبت درخواست مشاوره
+            {status === "submitting" ? "در حال ثبت..." : "ثبت درخواست مشاوره"}
           </button>
         </form>
       </div>

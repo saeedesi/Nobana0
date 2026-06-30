@@ -1,0 +1,126 @@
+// Nobana — data model
+// Run: npx prisma migrate dev --name init   (after setting DATABASE_URL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── پروژه ───────────────────────────────────────────────
+model Project {
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  title       String
+  type        ProjectType
+  location    String
+  area        Int?
+  status      ProjectStatus @default(COMPLETED)
+  description String?
+  images      String[]
+  featured    Boolean       @default(false)
+  order       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  updates      ProjectUpdate[]
+  assignments  ClientProject[]
+  testimonials Testimonial[]
+}
+
+enum ProjectType {
+  RESIDENTIAL
+  COMMERCIAL
+  OFFICE
+}
+
+enum ProjectStatus {
+  IN_PROGRESS
+  COMPLETED
+  PLANNING
+}
+
+// ─── به‌روزرسانی پروژه (گزارش کارفرما) ────────────────────
+model ProjectUpdate {
+  id          Int      @id @default(autoincrement())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   Int
+  title       String
+  description String
+  phase       String?
+  progress    Int?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+// ─── کارفرما ─────────────────────────────────────────────
+model Client {
+  id           Int             @id @default(autoincrement())
+  name         String
+  email        String          @unique
+  phone        String?
+  passwordHash String
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+
+  projects     ClientProject[]
+}
+
+// ─── اتصال کارفرما به پروژه ──────────────────────────────
+model ClientProject {
+  id          Int       @id @default(autoincrement())
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    Int
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   Int
+  startDate   DateTime?
+  endDate     DateTime?
+  contractRef String?
+
+  @@unique([clientId, projectId])
+}
+
+// ─── نظرات کارفرمایان ────────────────────────────────────
+model Testimonial {
+  id          Int      @id @default(autoincrement())
+  clientName  String
+  projectType String?
+  text        String
+  project     Project? @relation(fields: [projectId], references: [id])
+  projectId   Int?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+// ─── درخواست مشاوره (لید) ────────────────────────────────
+model ConsultationRequest {
+  id          Int        @id @default(autoincrement())
+  name        String
+  phone       String
+  email       String?
+  projectType String?
+  city        String?
+  area        Int?
+  description String?
+  status      LeadStatus @default(NEW)
+  createdAt   DateTime   @default(now())
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CLOSED
+}
+
+// ─── ادمین ────────────────────────────────────────────────
+model Admin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
