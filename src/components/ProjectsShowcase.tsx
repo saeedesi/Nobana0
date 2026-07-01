@@ -97,7 +97,7 @@ export default function ProjectsShowcase() {
     return () => window.removeEventListener('resize', apply);
   }, []);
 
-  const bend = isMobile ? 1 : 3;
+  const bend = isMobile ? 2 : 3;
 
   const galleryRef = useRef<CircularGalleryHandle>(null);
   const items = useMemo(() => projects.map(p => ({ image: p.image, text: p.text })), []);
@@ -128,7 +128,7 @@ export default function ProjectsShowcase() {
           font="bold 30px Vazirmatn"
           scrollSpeed={2}
           scrollEase={0.05}
-          scrollLinked={isMobile}
+          scrollLinked={false}
           onItemClick={handleItemClick}
         />
       </div>

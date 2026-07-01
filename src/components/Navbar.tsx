@@ -21,6 +21,23 @@ export default function Navbar() {
   const [activeSection, setActiveSection] = useState("");
   const [hasShotLight, setHasShotLight] = useState(false);
 
+  function handleNavClick(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    e.preventDefault();
+    const target = document.querySelector(href);
+    if (!target) return;
+
+    if (!isScrolled) {
+      // Instantly nudge scroll past 60px so the navbar collapse animation begins,
+      // then wait for its CSS transition (500ms) before smooth-scrolling to target.
+      window.scrollTo({ top: 61, behavior: "instant" });
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 500);
+    } else {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
   // Track scroll for shrinking header and timing the light shoot
   useEffect(() => {
     return scrollY.on("change", (latest) => {
@@ -111,9 +128,10 @@ export default function Navbar() {
             {navItems.map((item) => {
               const isActive = activeSection === item.href.substring(1);
               return (
-                <a 
+                <a
                   key={item.href}
-                  href={item.href} 
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className={`relative hover:text-white transition-colors ${isScrolled ? "py-1" : "py-2"}`}
                 >
                   {item.name}

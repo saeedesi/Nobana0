@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
-    "@prisma/client": "^6.1.0",
+    "@prisma/client": "^6.19.3",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

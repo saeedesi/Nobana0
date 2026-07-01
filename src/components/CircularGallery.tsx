@@ -420,16 +420,22 @@ class Media {
 
     const planeOffset = this.plane.scale.x / 2;
     const viewportOffset = this.viewport.width / 2;
+
+    // Multi-step wrap: a single `if` only corrects one jump per frame, which
+    // breaks when scroll.current leaps past widthTotal (fast drag or lightbox
+    // restore). Loop until the item lands inside the visible strip.
+    let guard = this.length + 2; // safety cap — never more iterations than items
+    while (--guard > 0 && direction === 'right' && this.plane.position.x + planeOffset < -viewportOffset) {
+      this.extra -= this.widthTotal;
+      this.plane.position.x = this.x - scroll.current - this.extra;
+    }
+    guard = this.length + 2;
+    while (--guard > 0 && direction === 'left' && this.plane.position.x - planeOffset > viewportOffset) {
+      this.extra += this.widthTotal;
+      this.plane.position.x = this.x - scroll.current - this.extra;
+    }
     this.isBefore = this.plane.position.x + planeOffset < -viewportOffset;
     this.isAfter = this.plane.position.x - planeOffset > viewportOffset;
-    if (direction === 'right' && this.isBefore) {
-      this.extra -= this.widthTotal;
-      this.isBefore = this.isAfter = false;
-    }
-    if (direction === 'left' && this.isAfter) {
-      this.extra += this.widthTotal;
-      this.isBefore = this.isAfter = false;
-    }
   }
   onResize({ screen, viewport }: { screen?: ScreenSize; viewport?: Viewport } = {}) {
     if (screen) this.screen = screen;
