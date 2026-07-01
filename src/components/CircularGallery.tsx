@@ -680,6 +680,11 @@ class App {
   setScrollTarget(value: number) {
     this.scroll.target = value;
   }
+  // Nudge scroll target by a delta — used by delta-based scroll-linked mode.
+  addToScrollTarget(delta: number) {
+    this.scroll.target += delta;
+    this.onCheckDebounce();
+  }
   // Snap a given item to the center (used when returning from the lightbox).
   centerIndex(index: number) {
     if (!this.medias[0]) return;
@@ -823,18 +828,22 @@ const CircularGallery = forwardRef<CircularGalleryHandle, CircularGalleryProps>(
 
       if (scrollLinked) {
         const el = containerRef.current;
+        let lastScrollY = window.scrollY;
         onPageScroll = () => {
           if (!app || app.isLocked()) return;
           const rect = el.getBoundingClientRect();
           const vh = window.innerHeight || document.documentElement.clientHeight;
-          // 0 as the gallery enters from the bottom, 1 as it leaves the top.
-          let p = (vh - rect.top) / (vh + rect.height);
-          p = Math.min(Math.max(p, 0), 1);
-          app.setScrollTarget(p * app.getLoopWidth());
+          // Only rotate while the gallery is visible in the viewport.
+          if (rect.top < vh && rect.bottom > 0) {
+            const delta = window.scrollY - lastScrollY;
+            // 0.8 = sensitivity: each px of vertical scroll rotates gallery 0.8 units.
+            app.addToScrollTarget(delta * 0.8);
+          }
+          lastScrollY = window.scrollY;
         };
         window.addEventListener('scroll', onPageScroll, { passive: true });
-        window.addEventListener('resize', onPageScroll);
-        onPageScroll();
+        window.addEventListener('resize', () => { lastScrollY = window.scrollY; });
+        lastScrollY = window.scrollY;
       }
     });
     return () => {
