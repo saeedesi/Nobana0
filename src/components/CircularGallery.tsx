@@ -837,7 +837,7 @@ const CircularGallery = forwardRef<CircularGalleryHandle, CircularGalleryProps>(
           if (rect.top < vh && rect.bottom > 0) {
             const delta = window.scrollY - lastScrollY;
             // 0.8 = sensitivity: each px of vertical scroll rotates gallery 0.8 units.
-            app.addToScrollTarget(delta * 0.8);
+            app.addToScrollTarget(delta * 0.08);
           }
           lastScrollY = window.scrollY;
         };
