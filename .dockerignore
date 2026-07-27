@@ -1,0 +1,33 @@
+node_modules
+.pnpm-store
+.next
+.git
+.git.backup
+.env
+.env.*
+!.env.example
+
+# generated at build time inside the image
+src/generated
+
+# local-only assets, not needed in the image
+propsal
+mockup_screenshots
+mockup_home.html
+docs
+.agents
+.claude
+
+*.tsbuildinfo
+.DS_Store
+npm-debug.log*
+.pnpm-debug.log*
+README.md
+AI_ARCHITECTURE.md
+AI_MEMORY.md
+PROJECT_STATUS.md
+SCREENSHOT_TASK.md
+docker-compose*.yml
+Dockerfile
+nginx
+trim.js

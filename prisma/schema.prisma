@@ -3,6 +3,12 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Emit into the project tree, not node_modules.
+  // With pnpm the default output lands inside node_modules/.pnpm/@prisma+client@<hash>/,
+  // which Next's file tracer does not reliably follow into `output: 'standalone'`.
+  output   = "../src/generated/prisma"
+  // "native" for local dev (macOS); debian-openssl-3.0.x for the Docker image (node:22-bookworm-slim).
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {

@@ -1,0 +1,91 @@
+# Nobana — production stack for the VPS.
+#
+#   docker compose build
+#   docker compose up -d
+#
+# Requires a .env file next to this one (see .env.example) with at least:
+#   POSTGRES_PASSWORD, DATABASE_URL, JWT_SECRET, NEXT_PUBLIC_SITE_URL
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nobana}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-nobana_db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nobana} -d ${POSTGRES_DB:-nobana_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No published port: only reachable on the internal compose network.
+    networks: [internal]
+
+  # Runs once per `up`, applies pending migrations, then exits.
+  migrate:
+    build:
+      context: .
+      target: migrator
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    networks: [internal]
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://nobana.ir}
+    volumes:
+      - uploads:/app/public/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [internal]
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nobana.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - app
+    networks: [internal]
+
+  # One-shot helper. First issue:
+  #   docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
+  #     -d nobana.ir -d www.nobana.ir --email you@example.com --agree-tos --no-eff-email
+  # Renewal (cron, monthly):
+  #   docker compose run --rm certbot renew && docker compose exec nginx nginx -s reload
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: certbot
+    profiles: [tools]
+
+volumes:
+  pgdata:
+  uploads:
+  certbot_conf:
+  certbot_www:
+
+networks:
+  internal:
