@@ -29,6 +29,178 @@ function toFa(n: number): string {
   return n.toLocaleString('fa-IR', { useGrouping: false });
 }
 
+type Pt = { x: number; y: number };
+type Xf = { s: number; x: number; y: number };
+const MAX_ZOOM = 4;
+const TAP_ZOOM = 2.5;
+
+/**
+ * Pinch / double-tap zoom + pan, and horizontal swipe to change image.
+ * Pointer-event based so it works for touch and mouse; `touch-none` keeps the
+ * browser from turning the gesture into a page zoom/scroll.
+ */
+function ZoomPan({
+  children,
+  onSwipe
+}: {
+  children: React.ReactNode;
+  onSwipe: (dir: 1 | -1) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [xf, setXf] = useState<Xf>({ s: 1, x: 0, y: 0 });
+  const [smooth, setSmooth] = useState(false);
+  const xfRef = useRef<Xf>({ s: 1, x: 0, y: 0 });
+  const pointers = useRef(new Map<number, Pt>());
+  const g = useRef({
+    type: 'none' as 'none' | 'pan' | 'pinch' | 'swipe',
+    start: { s: 1, x: 0, y: 0 } as Xf,
+    p0: { x: 0, y: 0 } as Pt,
+    dist0: 1,
+    mid0: { x: 0, y: 0 } as Pt,
+    moved: false,
+    t0: 0
+  });
+  const lastTap = useRef({ t: 0, x: 0, y: 0 });
+
+  const apply = (n: Xf, anim = false) => {
+    xfRef.current = n;
+    setSmooth(anim);
+    setXf(n);
+  };
+  const clamp = (n: Xf): Xf => {
+    const el = ref.current;
+    if (!el) return n;
+    const s = Math.min(MAX_ZOOM, Math.max(1, n.s));
+    const mx = ((s - 1) * el.clientWidth) / 2;
+    const my = ((s - 1) * el.clientHeight) / 2;
+    return { s, x: Math.max(-mx, Math.min(mx, n.x)), y: Math.max(-my, Math.min(my, n.y)) };
+  };
+  // Keep the content point under `p` fixed while changing scale.
+  const zoomAround = (from: Xf, p: Pt, s: number): Xf => {
+    const cx = (p.x - from.x) / from.s;
+    const cy = (p.y - from.y) / from.s;
+    return { s, x: p.x - cx * s, y: p.y - cy * s };
+  };
+  const local = (e: React.PointerEvent): Pt => {
+    const r = ref.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left - r.width / 2, y: e.clientY - r.top - r.height / 2 };
+  };
+  const two = () => {
+    const [a, b] = Array.from(pointers.current.values());
+    return {
+      dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+      mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+    };
+  };
+  const beginSingle = (p: Pt) => {
+    const cur = xfRef.current;
+    g.current.type = cur.s > 1.01 ? 'pan' : 'swipe';
+    g.current.start = cur;
+    g.current.p0 = p;
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const p = local(e);
+    pointers.current.set(e.pointerId, p);
+    if (pointers.current.size === 2) {
+      const { dist, mid } = two();
+      g.current = { ...g.current, type: 'pinch', start: xfRef.current, dist0: dist, mid0: mid, moved: true };
+    } else if (pointers.current.size === 1) {
+      beginSingle(p);
+      g.current.moved = false;
+      g.current.t0 = performance.now();
+    }
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    const p = local(e);
+    pointers.current.set(e.pointerId, p);
+    const st = g.current;
+    if (st.type === 'pinch' && pointers.current.size >= 2) {
+      const { dist, mid } = two();
+      const s = Math.min(MAX_ZOOM, Math.max(1, (st.start.s * dist) / st.dist0));
+      const z = zoomAround(st.start, st.mid0, s);
+      apply(clamp({ s, x: z.x + (mid.x - st.mid0.x), y: z.y + (mid.y - st.mid0.y) }));
+      return;
+    }
+    const dx = p.x - st.p0.x;
+    const dy = p.y - st.p0.y;
+    if (Math.hypot(dx, dy) > 8) st.moved = true;
+    if (st.type === 'pan') {
+      apply(clamp({ s: st.start.s, x: st.start.x + dx, y: st.start.y + dy }));
+    } else if (st.type === 'swipe') {
+      apply({ s: 1, x: dx, y: 0 });
+    }
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    const p = local(e);
+    pointers.current.delete(e.pointerId);
+    const st = g.current;
+
+    if (st.type === 'pinch') {
+      if (pointers.current.size === 1) {
+        // One finger left: continue as a pan without jumping.
+        beginSingle(Array.from(pointers.current.values())[0]);
+        g.current.moved = true;
+      } else if (pointers.current.size === 0) {
+        st.type = 'none';
+        if (xfRef.current.s < 1.05) apply({ s: 1, x: 0, y: 0 }, true);
+      }
+      return;
+    }
+    if (pointers.current.size > 0) return;
+
+    if (st.type === 'swipe') {
+      const dx = p.x - st.p0.x;
+      if (Math.abs(dx) > 60) {
+        onSwipe(dx < 0 ? 1 : -1);
+        st.type = 'none';
+        return;
+      }
+      apply({ s: 1, x: 0, y: 0 }, true);
+    }
+    st.type = 'none';
+
+    // Double tap / double click toggles zoom at the tapped point.
+    if (!st.moved && performance.now() - st.t0 < 300) {
+      const now = performance.now();
+      const lt = lastTap.current;
+      if (now - lt.t < 320 && Math.hypot(p.x - lt.x, p.y - lt.y) < 40) {
+        const cur = xfRef.current;
+        apply(cur.s > 1.01 ? { s: 1, x: 0, y: 0 } : clamp(zoomAround(cur, p, TAP_ZOOM)), true);
+        lastTap.current = { t: 0, x: 0, y: 0 };
+      } else {
+        lastTap.current = { t: now, x: p.x, y: p.y };
+      }
+    }
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={`absolute inset-0 touch-none select-none ${xf.s > 1.01 ? 'cursor-grab' : 'cursor-zoom-in'}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+    >
+      <div
+        className="absolute inset-0 will-change-transform"
+        style={{
+          transform: `translate3d(${xf.x}px, ${xf.y}px, 0) scale(${xf.s})`,
+          transition: smooth ? 'transform 250ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none'
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectLightbox({ project, onClose, anchorId }: ProjectLightboxProps) {
   const images = project.images;
   const [index, setIndex] = useState(0);
@@ -41,6 +213,11 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   }, [showInfo]);
   const hasInfo = Boolean(project.details?.length || project.description?.length);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const thumbsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = thumbsRef.current?.children[index] as HTMLElement | undefined;
+    el?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [index]);
 
   const paginate = useCallback(
     (dir: number) => {
@@ -171,8 +348,8 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
         role="dialog"
         aria-modal="true"
         aria-label={`گالری تصاویر پروژه ${project.text}`}
-        className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden overscroll-none bg-black/90 backdrop-blur-xl landscape-mobile:p-0 ${
-          expanded ? 'p-0' : 'px-2 py-16 md:px-4'
+        className={`fixed inset-0 z-[100] flex flex-col items-center overflow-hidden overscroll-none bg-black/90 backdrop-blur-xl landscape-mobile:p-0 landscape-mobile:justify-center ${
+          expanded ? 'p-0 justify-center' : 'pt-20 pb-4 justify-start md:px-4 md:py-16 md:justify-center'
         }`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -222,19 +399,19 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
         )}
 
         {/* Title */}
-        <div className={`mb-6 text-center landscape-mobile:hidden ${expanded ? 'hidden' : ''}`}>
-          <h3 className="text-2xl md:text-3xl font-light text-primary">{project.text}</h3>
+        <div className={`mb-3 md:mb-6 px-4 text-center landscape-mobile:hidden ${expanded ? 'hidden' : ''}`}>
+          <h3 className="text-xl md:text-3xl font-light text-primary">{project.text}</h3>
           {project.subtitle && (
-            <p className="text-sm text-white/50 mt-1 tracking-widest">{project.subtitle}</p>
+            <p className="text-xs md:text-sm text-white/50 mt-1 tracking-widest">{project.subtitle}</p>
           )}
         </div>
 
         {/* Stage */}
         <div
-          className={`relative overflow-hidden bg-white/5 landscape-mobile:max-w-none landscape-mobile:h-full landscape-mobile:aspect-auto landscape-mobile:rounded-none landscape-mobile:border-0 landscape-mobile:bg-transparent ${
+          className={`relative overflow-hidden md:bg-white/5 landscape-mobile:max-w-none landscape-mobile:h-full landscape-mobile:aspect-auto landscape-mobile:rounded-none landscape-mobile:border-0 landscape-mobile:bg-transparent ${
             expanded
               ? 'w-full h-full max-w-none rounded-none border-0 bg-transparent'
-              : 'w-full max-w-[960px] aspect-[3/4] max-h-[64vh] md:aspect-[4/3] md:max-h-none rounded-xl md:rounded-2xl border border-white/10'
+              : 'w-full flex-1 min-h-0 md:flex-none md:max-w-[960px] md:aspect-[4/3] md:max-h-[calc(100dvh-19rem)] md:rounded-2xl md:border md:border-white/10'
           }`}
           onClick={e => e.stopPropagation()}
         >
@@ -247,14 +424,8 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: direction >= 0 ? -80 : 80 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(_, info) => {
-                if (info.offset.x < -80) paginate(1);
-                else if (info.offset.x > 80) paginate(-1);
-              }}
             >
+              <ZoomPan onSwipe={paginate}>
               <Image
                 src={images[index]}
                 alt={`${project.text} - تصویر ${toFa(index + 1)}`}
@@ -262,8 +433,10 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
                 sizes="(max-width: 768px) 100vw, 960px"
                 // Always show the full photo (no cropping) — letterbox instead.
                 className="pointer-events-none select-none object-contain"
+                draggable={false}
                 priority
               />
+              </ZoomPan>
             </motion.div>
           </AnimatePresence>
 
@@ -322,14 +495,14 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
               <button
                 onClick={() => paginate(1)}
                 aria-label="بعدی"
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-white/20 bg-black/40 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-white/20 bg-black/40 backdrop-blur-md items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <button
                 onClick={() => paginate(-1)}
                 aria-label="قبلی"
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-white/20 bg-black/40 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-white/20 bg-black/40 backdrop-blur-md items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
@@ -337,35 +510,36 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
           )}
         </div>
 
-        {/* Counter + dots */}
+        {/* Counter + thumbnails */}
         {images.length > 1 && (
           <div
-            className={`flex flex-col items-center gap-4 landscape-mobile:absolute landscape-mobile:bottom-3 landscape-mobile:mt-0 ${
-              expanded ? 'absolute bottom-4 mt-0' : 'mt-6'
+            className={`w-full max-w-[960px] flex flex-col items-center gap-2 md:gap-3 landscape-mobile:absolute landscape-mobile:bottom-2 landscape-mobile:mt-0 ${
+              expanded ? 'absolute bottom-4 mt-0' : 'mt-3 md:mt-5'
             }`}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2">
-              {images.map((_, i) => (
+            <div
+              ref={thumbsRef}
+              className="flex gap-2 max-w-full overflow-x-auto px-3 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {images.map((src, i) => (
                 <button
-                  key={i}
+                  key={src}
                   aria-label={`تصویر ${toFa(i + 1)}`}
                   aria-current={i === index}
                   onClick={() => {
                     setDirection(i > index ? 1 : -1);
                     setIndex(i);
                   }}
-                  className="group flex items-center justify-center min-w-[24px] min-h-[24px]"
+                  className={`relative shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-md overflow-hidden border-2 transition-all ${
+                    i === index ? 'border-primary opacity-100' : 'border-transparent opacity-45 hover:opacity-80'
+                  }`}
                 >
-                  <span
-                    className={`block h-2 rounded-full transition-all ${
-                      i === index ? 'w-6 bg-primary' : 'w-2 bg-white/40 group-hover:bg-white/60'
-                    }`}
-                  />
+                  <Image src={src} alt="" fill sizes="56px" className="object-cover" />
                 </button>
               ))}
             </div>
-            <span className="text-white/50 text-sm tracking-widest">
+            <span className="text-white/50 text-xs md:text-sm tracking-widest">
               {toFa(index + 1)} / {toFa(images.length)}
             </span>
           </div>
