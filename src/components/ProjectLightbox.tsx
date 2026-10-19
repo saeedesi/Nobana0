@@ -172,7 +172,7 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
         aria-modal="true"
         aria-label={`گالری تصاویر پروژه ${project.text}`}
         className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden overscroll-none bg-black/90 backdrop-blur-xl landscape-mobile:p-0 ${
-          expanded ? 'p-0' : 'px-4 py-16'
+          expanded ? 'p-0' : 'px-2 py-16 md:px-4'
         }`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -234,7 +234,7 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
           className={`relative overflow-hidden bg-white/5 landscape-mobile:max-w-none landscape-mobile:h-full landscape-mobile:aspect-auto landscape-mobile:rounded-none landscape-mobile:border-0 landscape-mobile:bg-transparent ${
             expanded
               ? 'w-full h-full max-w-none rounded-none border-0 bg-transparent'
-              : 'w-full max-w-[960px] aspect-[4/3] rounded-2xl border border-white/10'
+              : 'w-full max-w-[960px] aspect-[3/4] max-h-[64vh] md:aspect-[4/3] md:max-h-none rounded-xl md:rounded-2xl border border-white/10'
           }`}
           onClick={e => e.stopPropagation()}
         >

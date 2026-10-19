@@ -223,7 +223,7 @@ export default function ProjectsShowcase() {
 
   return (
     <>
-      <div className="h-[520px] md:h-[640px] w-full">
+      <div className="h-[600px] md:h-[640px] w-full">
         <CircularGallery
           ref={galleryRef}
           items={items}
