@@ -624,12 +624,34 @@ class App {
   onTouchUp() {
     this.isDown = false;
     this.onCheck();
-    // A tap (no meaningful drag) that started on the gallery opens the
-    // currently centered project.
-    if (this.downOnContainer && !this.dragged && this.onItemClick) {
-      this.onItemClick(this.getCenteredIndex());
-    }
+    // A tap (no meaningful drag) on the gallery: the centered card opens,
+    // a side card rotates to the center instead.
+    if (this.downOnContainer && !this.dragged) this.handleTap(this.downX);
     this.downOnContainer = false;
+  }
+  handleTap(clientX: number) {
+    if (!this.medias.length || !this.itemsLength) return;
+    const rect = this.container.getBoundingClientRect();
+    const worldX = ((clientX - rect.left) / this.screen.width - 0.5) * this.viewport.width;
+    // Nearest card to the tap point.
+    let hit = 0;
+    let min = Infinity;
+    this.medias.forEach((media, i) => {
+      const d = Math.abs(media.plane.position.x - worldX);
+      if (d < min) {
+        min = d;
+        hit = i;
+      }
+    });
+    const media = this.medias[hit];
+    const offset = media.plane.position.x;
+    if (Math.abs(offset) < media.plane.scale.x / 2) {
+      this.onItemClick?.(hit % this.itemsLength);
+    } else {
+      // Rotate the tapped card to the center (position.x = x - scroll).
+      this.scroll.target += offset;
+      this.onCheck();
+    }
   }
   getCenteredIndex(): number {
     if (!this.medias.length || !this.itemsLength) return 0;

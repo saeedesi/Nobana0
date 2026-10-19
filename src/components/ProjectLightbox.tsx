@@ -4,12 +4,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Maximize2, Minimize2, Info } from 'lucide-react';
 
 export interface LightboxProject {
   text: string;
   subtitle?: string;
   images: string[];
+  /** Spec rows shown in the info panel (location, client, year, area, …). */
+  details?: { label: string; value: string }[];
+  /** Description paragraphs shown in the info panel. */
+  description?: string[];
+  /** Optional per-image badge (same order as `images`). */
+  captions?: (string | null)[];
 }
 
 interface ProjectLightboxProps {
@@ -28,6 +34,12 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const showInfoRef = useRef(false);
+  useEffect(() => {
+    showInfoRef.current = showInfo;
+  }, [showInfo]);
+  const hasInfo = Boolean(project.details?.length || project.description?.length);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const paginate = useCallback(
@@ -48,7 +60,8 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        if (showInfoRef.current) setShowInfo(false);
+        else onClose();
       } else if (e.key === 'ArrowLeft') {
         paginate(1); // RTL: Left advances
       } else if (e.key === 'ArrowRight') {
@@ -84,6 +97,8 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
     let wheelLock = false;
     let wheelEndTimer = 0;
     const onWheel = (e: WheelEvent) => {
+      // Let the info panel scroll natively instead of flipping images.
+      if (showInfoRef.current) return;
       const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
       if (Math.abs(delta) < 8) return;
       window.clearTimeout(wheelEndTimer);
@@ -169,7 +184,7 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
         <button
           onClick={onClose}
           aria-label="بستن"
-          className="absolute top-6 left-6 z-20 w-11 h-11 rounded-full border border-white/20 bg-black/40 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          className="absolute top-6 left-6 z-30 w-11 h-11 rounded-full border border-white/20 bg-black/40 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -181,10 +196,30 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
             setExpanded(v => !v);
           }}
           aria-label={expanded ? 'کوچک‌کردن' : 'بزرگ‌کردن'}
-          className="hidden md:flex absolute top-6 left-20 z-20 w-11 h-11 rounded-full border border-white/20 bg-black/40 items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          className="hidden md:flex absolute top-6 left-20 z-30 w-11 h-11 rounded-full border border-white/20 bg-black/40 items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
         >
           {expanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
+
+        {/* Project info toggle */}
+        {hasInfo && (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setShowInfo(v => !v);
+            }}
+            aria-label={showInfo ? 'بستن جزئیات پروژه' : 'جزئیات پروژه'}
+            aria-pressed={showInfo}
+            className={`absolute top-6 left-20 md:left-[8.5rem] z-30 h-11 px-4 rounded-full border flex items-center gap-2 text-sm transition-colors ${
+              showInfo
+                ? 'border-primary/60 bg-primary/15 text-primary'
+                : 'border-white/20 bg-black/40 text-white/80 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <Info className="w-5 h-5" />
+            <span className="hidden sm:inline">جزئیات پروژه</span>
+          </button>
+        )}
 
         {/* Title */}
         <div className={`mb-6 text-center landscape-mobile:hidden ${expanded ? 'hidden' : ''}`}>
@@ -225,16 +260,64 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
                 alt={`${project.text} - تصویر ${toFa(index + 1)}`}
                 fill
                 sizes="(max-width: 768px) 100vw, 960px"
-                className={`pointer-events-none select-none landscape-mobile:object-contain ${
-                  expanded ? 'object-contain' : 'object-cover'
-                }`}
+                // Always show the full photo (no cropping) — letterbox instead.
+                className="pointer-events-none select-none object-contain"
                 priority
               />
             </motion.div>
           </AnimatePresence>
 
+          {/* Per-image badge, e.g. «قبل از بازسازی» */}
+          {project.captions?.[index] && !showInfo && (
+            <span className="absolute top-3 right-3 z-10 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-xs md:text-sm text-white/90 pointer-events-none">
+              {project.captions[index]}
+            </span>
+          )}
+
+          {/* Info panel (overlays the stage so the layout never overflows) */}
+          <AnimatePresence>
+            {hasInfo && showInfo && (
+              <motion.div
+                key="info"
+                className={`absolute inset-0 z-20 overflow-y-auto overscroll-contain bg-black/85 backdrop-blur-md p-6 md:p-10 text-right landscape-mobile:pt-20 ${
+                  expanded ? 'pt-24 md:pt-24' : ''
+                }`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <h4 className="text-xl md:text-2xl font-light text-primary">{project.text}</h4>
+                  <button
+                    onClick={() => setShowInfo(false)}
+                    aria-label="بستن جزئیات پروژه"
+                    className="shrink-0 w-10 h-10 rounded-full border border-white/20 bg-black/40 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {project.details && project.details.length > 0 && (
+                  <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 mb-8">
+                    {project.details.map(d => (
+                      <div key={d.label} className="border-r border-white/15 pr-3">
+                        <dt className="text-xs text-white/45 mb-1">{d.label}</dt>
+                        <dd className="text-sm md:text-base text-white/90">{d.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                {project.description?.map((para, i) => (
+                  <p key={i} className="text-sm md:text-base leading-8 text-white/75 mb-4 last:mb-0">
+                    {para}
+                  </p>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Prev / Next (RTL: next on the left, previous on the right) */}
-          {images.length > 1 && (
+          {images.length > 1 && !showInfo && (
             <>
               <button
                 onClick={() => paginate(1)}
