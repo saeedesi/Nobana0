@@ -29,6 +29,16 @@ function toFa(n: number): string {
   return n.toLocaleString('fa-IR', { useGrouping: false });
 }
 
+type FsDoc = Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
+type FsEl = HTMLElement & { webkitRequestFullscreen?: () => void };
+const fsElement = () => document.fullscreenElement ?? (document as FsDoc).webkitFullscreenElement ?? null;
+const exitNativeFs = () => {
+  if (!fsElement()) return;
+  const d = document as FsDoc;
+  if (d.exitFullscreen) d.exitFullscreen().catch(() => {});
+  else d.webkitExitFullscreen?.();
+};
+
 type Pt = { x: number; y: number };
 type Xf = { s: number; x: number; y: number };
 const MAX_ZOOM = 4;
@@ -206,6 +216,8 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  // True while we hold the browser's native fullscreen (Fullscreen API).
+  const nativeFsRef = useRef(false);
   const [showInfo, setShowInfo] = useState(false);
   const showInfoRef = useRef(false);
   useEffect(() => {
@@ -214,6 +226,50 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
   const hasInfo = Boolean(project.details?.length || project.description?.length);
   const dialogRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
+
+
+  // Fullscreen button: expands the photo to the whole window and, where the
+  // browser allows it (Android/desktop; not iPhone Safari), also enters native
+  // fullscreen so the browser UI disappears.
+  const toggleExpanded = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next) {
+      const el = dialogRef.current as FsEl | null;
+      try {
+        if (el?.requestFullscreen) {
+          el.requestFullscreen()
+            .then(() => (nativeFsRef.current = true))
+            .catch(() => {});
+        } else if (el?.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+          nativeFsRef.current = true;
+        }
+      } catch {
+        /* layout-only fullscreen still applies */
+      }
+    } else {
+      nativeFsRef.current = false;
+      exitNativeFs();
+    }
+  };
+
+  // Leaving native fullscreen via Esc / back gesture also leaves expanded mode.
+  useEffect(() => {
+    const onFsChange = () => {
+      if (!fsElement() && nativeFsRef.current) {
+        nativeFsRef.current = false;
+        setExpanded(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('webkitfullscreenchange', onFsChange);
+      exitNativeFs();
+    };
+  }, []);
   useEffect(() => {
     const el = thumbsRef.current?.children[index] as HTMLElement | undefined;
     el?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
@@ -366,14 +422,15 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
           <X className="w-5 h-5" />
         </button>
 
-        {/* Expand / collapse (desktop only) */}
+        {/* Fullscreen toggle */}
         <button
           onClick={e => {
             e.stopPropagation();
-            setExpanded(v => !v);
+            toggleExpanded();
           }}
-          aria-label={expanded ? 'کوچک‌کردن' : 'بزرگ‌کردن'}
-          className="hidden md:flex absolute top-6 left-20 z-30 w-11 h-11 rounded-full border border-white/20 bg-black/40 items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          aria-label={expanded ? 'خروج از تمام‌صفحه' : 'تمام‌صفحه'}
+          aria-pressed={expanded}
+          className="flex absolute top-6 left-20 z-30 w-11 h-11 rounded-full border border-white/20 bg-black/40 items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
         >
           {expanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
@@ -387,7 +444,7 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
             }}
             aria-label={showInfo ? 'بستن جزئیات پروژه' : 'جزئیات پروژه'}
             aria-pressed={showInfo}
-            className={`absolute top-6 left-20 md:left-[8.5rem] z-30 h-11 px-4 rounded-full border flex items-center gap-2 text-sm transition-colors ${
+            className={`absolute top-6 left-[8.5rem] z-30 h-11 px-3 sm:px-4 rounded-full border flex items-center gap-2 text-sm transition-colors ${
               showInfo
                 ? 'border-primary/60 bg-primary/15 text-primary'
                 : 'border-white/20 bg-black/40 text-white/80 hover:text-white hover:bg-white/10'
@@ -520,7 +577,7 @@ export default function ProjectLightbox({ project, onClose, anchorId }: ProjectL
           >
             <div
               ref={thumbsRef}
-              className="flex gap-2 max-w-full overflow-x-auto px-3 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className={`${expanded ? 'hidden' : 'flex'} gap-2 max-w-full overflow-x-auto px-3 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
             >
               {images.map((src, i) => (
                 <button
